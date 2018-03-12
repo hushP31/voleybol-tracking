@@ -1,0 +1,18 @@
+
+En caso de ser competición oficial:
+    1. Omitir contornos que tengan el 
+       color de la equipación de los 
+       jugadores.
+    2. Colores del balón.
+    3. Colores del campo de juego:
+        - Detectar campo de juego 
+          automáticamente
+          (usando el color) 
+          
+A. Seguir con la memoria TFG
+B. Algoritmo usando colores
+    Videos de youtube de comp. oficial
+
+C.Almacenar un vector con todas las parejas de puntos (punto Frontal y su respectivo punto Lateral)
+
+

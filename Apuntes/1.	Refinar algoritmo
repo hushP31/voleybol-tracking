@@ -1,0 +1,14 @@
+1.	Refinar algoritmo
+		- Colores del balón
+		- Lineas del campo
+		- Colores de equipaciones
+		- Calcular los tres puntos de las parabolas
+		- Añadir en informacion a escribir : posicion 3D + tiempo (frame)
+		- 
+
+2.	Representar los puntos
+
+3.	Calcular:
+		- Puntos mas altos de parabola
+		- Velocidad
+		- ...
