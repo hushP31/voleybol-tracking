@@ -797,7 +797,7 @@ int main(int argc, char* argv[]) {
     }
     cout << endl;
 
-    DrawParabola(lateral_relativos);
+    //DrawParabola(lateral_relativos);
 
     ImprimeArchivo(nombre_archivo, coordenadas_balon);
 

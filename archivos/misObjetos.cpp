@@ -666,7 +666,6 @@ vector<MiPunto> MaxMinRelativos(vector<MiPunto> v){
     }
 
     return solucion;
-
 }
 
 void DrawParabola(vector<MiPunto> v){
@@ -674,7 +673,73 @@ void DrawParabola(vector<MiPunto> v){
 }
 
 
+vector <MiPunto> ABC(vector <MiPunto> puntos_campo){
 
+    vector<Recta> rectas_campo;
+    vector<MiPunto> fugas;
+    vector<MiPunto> abc; //SOLUCION
+    Recta diagonal1, diagonal2;
+    Recta auxiliar_fugas;
+    Recta r, t;
+    MiPunto a, b, c;
+    float error = 1;
+    float ab, ac;
+
+
+    for(int i=0; i<4; i++)
+        rectas_campo.push_back(RectaDosPuntos(puntos_campo[i%4], puntos_campo[(i+1)%4]));
+
+    diagonal2 = RectaDosPuntos(puntos_campo[0], puntos_campo[2]);
+    diagonal1 = RectaDosPuntos(puntos_campo[1], puntos_campo[3]);
+
+    fugas.push_back(PuntoCorte(rectas_campo[0], rectas_campo[2]));
+    auxiliar_fugas = ParalelaPunto(rectas_campo[1], fugas[0]);
+
+    fugas.push_back(PuntoCorte(auxiliar_fugas, diagonal1));
+    fugas.push_back(PuntoCorte(auxiliar_fugas, diagonal2));
+
+    fugas.push_back(PuntoCorte(RectaDosPuntos(puntos_campo[1], fugas[2]), 
+                                    RectaDosPuntos(puntos_campo[2], fugas[1])));
+
+    //Recta que contiene a A.
+    r = RectaDosPuntos(fugas[0], fugas[3]);
+    a.y = fugas[0].y - 20;
+    a.x = (a.y - r.k)/r.m;
+
+    //b, c, t
+
+    t = ParalelaPunto(rectas_campo[1], a);
+    b = PuntoCorte(rectas_campo[2], t);
+    c = PuntoCorte(rectas_campo[0], t);
+
+    ab = DistanciaPuntos(a,b);
+    ac = DistanciaPuntos(a,c);
+
+    error = abs(ab - ac);
+
+    while(error > 0.1){
+        if(ab > ac)
+            b.y+=0.1;
+        else
+            b.y-=0.1;
+
+        b.x = (b.y - rectas_campo[2].k)/rectas_campo[2].m;
+        t = RectaDosPuntos(a, b);
+        c = PuntoCorte(t, rectas_campo[0]);
+
+        ab = DistanciaPuntos(a,b);
+        ac = DistanciaPuntos(a,c);
+
+        error = abs(ab - ac);
+    }
+
+    abc.push_back(a);
+    abc.push_back(b);
+    abc.push_back(c);
+
+    return abc;
+
+}
 
 
 
