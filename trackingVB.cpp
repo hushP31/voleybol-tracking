@@ -801,7 +801,8 @@ int main(int argc, char* argv[]) {
 
     ImprimeArchivo(nombre_archivo, coordenadas_balon);
 
-
+    ABC(puntos);
+    ABC(puntosL);
 
     return 0;
 }

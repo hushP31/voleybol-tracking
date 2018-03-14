@@ -673,7 +673,7 @@ void DrawParabola(vector<MiPunto> v){
 }
 
 
-vector <MiPunto> ABC(vector <MiPunto> puntos_campo){
+vector<MiPunto> ABC(vector<MiPunto> puntos_campo){
 
     vector<Recta> rectas_campo;
     vector<MiPunto> fugas;
@@ -682,8 +682,11 @@ vector <MiPunto> ABC(vector <MiPunto> puntos_campo){
     Recta auxiliar_fugas;
     Recta r, t;
     MiPunto a, b, c;
-    float error = 1;
+    float error = 1, margen;
     float ab, ac;
+    int contador = 0;    
+    bool err = false;
+    bool err_aux = false;
 
 
     for(int i=0; i<4; i++)
@@ -703,7 +706,7 @@ vector <MiPunto> ABC(vector <MiPunto> puntos_campo){
 
     //Recta que contiene a A.
     r = RectaDosPuntos(fugas[0], fugas[3]);
-    a.y = fugas[0].y - 20;
+    a.y = fugas[0].y - 50;
     a.x = (a.y - r.k)/r.m;
 
     //b, c, t
@@ -716,12 +719,17 @@ vector <MiPunto> ABC(vector <MiPunto> puntos_campo){
     ac = DistanciaPuntos(a,c);
 
     error = abs(ab - ac);
+    margen = 0.1;
 
-    while(error > 0.1){
-        if(ab > ac)
-            b.y+=0.1;
-        else
-            b.y-=0.1;
+    while(error > 0.00001){
+        if(ab > ac){
+            b.y+=margen;
+            err = false;
+        }
+        else{
+            b.y-=margen;
+            err = true;
+        }
 
         b.x = (b.y - rectas_campo[2].k)/rectas_campo[2].m;
         t = RectaDosPuntos(a, b);
@@ -731,6 +739,21 @@ vector <MiPunto> ABC(vector <MiPunto> puntos_campo){
         ac = DistanciaPuntos(a,c);
 
         error = abs(ab - ac);
+        
+        if(error > 10)
+            margen = abs(error/4.0);
+        else{
+            if(contador < 10)
+                margen = 0.01;
+            else
+                margen = margen/2.0;
+        }
+
+        if(err_aux != err){
+            contador ++;
+            err_aux = err;
+        }
+
     }
 
     abc.push_back(a);
@@ -738,7 +761,6 @@ vector <MiPunto> ABC(vector <MiPunto> puntos_campo){
     abc.push_back(c);
 
     return abc;
-
 }
 
 

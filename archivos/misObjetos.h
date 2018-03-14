@@ -89,4 +89,5 @@ bool PuntosIguales(MiPunto p1, MiPunto p2);
 bool Desechable(MiPunto p, vector<MiPunto> v);
 
 vector<MiPunto> MaxMinRelativos(vector<MiPunto> v);
-void DrawParabola(std::vector<MiPunto> v);
+void DrawParabola(vector<MiPunto> v);
+vector<MiPunto> ABC(vector<MiPunto> puntos_campo);
