@@ -425,7 +425,7 @@ int main(int argc, char* argv[]) {
 	MiPunto point, pointL, suelo, point_aux, pointL_aux;
 	std::vector<float> avg_color_f, avg_color_l;
 
-	vector<MiPunto> frontal_points, lateral_points, desechables_f, desechables_l;
+	vector<MiPunto> frontal_points, lateral_points, desechables_f, desechables_l, frontal_abc, lateral_abc;
 
 	MiPunto3D coordenada_balon;
 	
@@ -554,97 +554,14 @@ int main(int argc, char* argv[]) {
 
 
             if(!imprime && point.y > 0 && pointL.y > 0){
-
-            	//Transformar puntos
-            	//1. Perpendicular a pground[3] que pasa por point
-            	perp_pgroundF = PerpendicularPunto(pgroundF[3], point);
-            	perp_pgroundL = PerpendicularPunto(pgroundL[3], pointL);
-
-            	//2. Puntos de corte entre perp_pground y bases del pground.
-            	vector <MiPunto> corte_basesF, corte_basesL;
-
-            	for(int i=0; i<2; i++){
-            		corte_basesF.push_back(PuntoCorte(perp_pgroundF, pgroundF[i*2+1]));
-            		corte_basesL.push_back(PuntoCorte(perp_pgroundL, pgroundL[i*2+1]));
-            	}
-
-            	//3. Calculo de distancias proporcionales
+        		
+				//TRANSFORMAR LOS PUNTOS DETECTADOS A PUNTOS REALES DE CAMPO DE JUEGO
             	
-            	//Lateral
-            	d_lateral_fondo = DistanciaPuntos(puntosL[1], corte_basesL[0]);
-            	dieciocho_metros = DistanciaPuntos(puntosL[1], puntosL[2]);
-            	distancia_extrapolada_left = d_lateral_fondo*18.0/dieciocho_metros;
 
-            	point_lateral_extrapolado_1.y = Trunca(2, distancia_extrapolada_left);
-            	point_lateral_extrapolado_1.x = 0.0;
-
-
-            	d_lateral_fondo = DistanciaPuntos(puntosL[0], corte_basesL[1]);
-            	dieciocho_metros = DistanciaPuntos(puntosL[0], puntosL[3]);
-            	distancia_extrapolada_right = d_lateral_fondo*18.0/dieciocho_metros;
-
-            	point_lateral_extrapolado_2.y = Trunca(2, distancia_extrapolada_right);
-            	point_lateral_extrapolado_2.x = 9.0;
-
-
-            	//Frontal
-            	d_lateral_fondo = DistanciaPuntos(puntos[1], corte_basesF[0]);
-            	dieciocho_metros = DistanciaPuntos(puntos[1], puntos[2]);
-            	distancia_extrapolada_left = d_lateral_fondo*9.0/dieciocho_metros;
-
-            	point_frontal_extrapolado_1.x = Trunca(2, distancia_extrapolada_left);
-            	point_frontal_extrapolado_1.y = 18.0;
-
-            	d_lateral_fondo = DistanciaPuntos(puntos[0], corte_basesF[1]);
-            	dieciocho_metros = DistanciaPuntos(puntos[0], puntos[3]);
-            	distancia_extrapolada_right = d_lateral_fondo*9.0/dieciocho_metros;
-
-            	point_frontal_extrapolado_2.x = Trunca(2, distancia_extrapolada_right) ;
-            	point_frontal_extrapolado_2.y = 0.0;
-
-            	Recta frntl = RectaDosMiPunto(point_frontal_extrapolado_1, point_frontal_extrapolado_2);
-            	Recta ltrl = RectaDosMiPunto(point_lateral_extrapolado_1, point_lateral_extrapolado_2);
-
-            	suelo = PuntoCorte(frntl, ltrl);
-
-            	suelo.x = Trunca(2, suelo.x);
-            	suelo.y = Trunca(2, suelo.y);
-
-
-            	altura_balon = Altura(puntos, point, suelo);
-
-            	coordenada_balon.x = suelo.x;
-            	coordenada_balon.y = abs(altura_balon); 
-            	coordenada_balon.z = suelo.y;
-
-            	/************************************
-            	/*
-            	/*	Usar dos vectores, uno a modo de solucion y otro auxiliar.
-
-        			Solucion: 
-            	/*
-            	/*
-            	/************************************/
-
-
-				DrawPlayGround(frame1, puntos, 1);
-				DrawPlayGround(frame1L, puntosL, 0);
-
-                DrawObject(frame1, point, coordenada_balon);
-                DrawObject(frame1L, pointL, coordenada_balon);
-                
-                if(coordenada_balon.y >= 0 ){
-                	MiPunto4D p(tiempo_frame, coordenada_balon);
-              		coordenadas_balon.push_back(p);
-                }
 
                 //Vista_Frontal();
         		Vista_Lateral(coordenadas_balon);
 				
-                line(frame1L,Point((int)corte_basesL[0].x, (int)corte_basesL[0].y), 
-                								Point((int)corte_basesL[1].x,(int)corte_basesL[1].y),Scalar(0,255,0),1);
-                line(frame1, Point((int)corte_basesF[0].x, (int)corte_basesF[0].y), 
-                								Point((int)corte_basesF[1].x,(int)corte_basesF[1].y),Scalar(0,255,0),1);
             }
         }
 		
@@ -754,29 +671,9 @@ int main(int argc, char* argv[]) {
 				pgroundL.push_back(RectaDosPuntos(puntosL[t], puntosL[(t+1)%4]));
 			}
 		
-			//Puntos de fuga Frontal Y Lateral
-			puntos_fugaF.push_back(PuntoCorte(pgroundF[0], pgroundF[2]));
-			puntos_fugaL.push_back(PuntoCorte(pgroundL[0], pgroundL[2]));
-
-			Recta r_aux = ParalelaPunto(pgroundF[1], puntos_fugaF[0]);
-			Recta r_aux_2 = ParalelaPunto(pgroundL[1], puntos_fugaL[0]);
-
-			puntos_fugaF.push_back(PuntoCorte(r_aux, RectaDosPuntos(puntos[1], puntos[3])));
-			puntos_fugaF.push_back(PuntoCorte(r_aux, RectaDosPuntos(puntos[0], puntos[2])));
-
-			puntos_fugaL.push_back(PuntoCorte(r_aux_2, RectaDosPuntos(puntosL[1], puntosL[3])));
-			puntos_fugaL.push_back(PuntoCorte(r_aux_2, RectaDosPuntos(puntosL[0], puntosL[2])));
-
-			//Rectas auxiliares usando los puntos de fuga
-			Recta aux_fuga_left = RectaDosPuntos(puntos_fugaF[1], puntos[0]);
-
-			fuga_left_inicio = PuntoCorte(aux_fuga_left, pgroundF[1]);
-			fuga_left_final = puntos[1];
-
-
-			aux_fuga_left = RectaDosPuntos(puntos_fugaL[1], puntosL[0]);
-			fuga_left_inicioL = PuntoCorte(aux_fuga_left, pgroundF[1]);
-			fuga_left_finalL = puntosL[1];
+			frontal_abc = ABC(puntos);
+    		lateral_abc = ABC(puntosL);
+			 
 
 			imprime = false;
         }
@@ -801,8 +698,7 @@ int main(int argc, char* argv[]) {
 
     ImprimeArchivo(nombre_archivo, coordenadas_balon);
 
-    ABC(puntos);
-    ABC(puntosL);
+    
 
     return 0;
 }

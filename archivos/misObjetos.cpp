@@ -765,6 +765,42 @@ vector<MiPunto> ABC(vector<MiPunto> puntos_campo){
 
 
 
+MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, 
+                                    vector <MiPunto> f_abc, vector <MiPunto> l_abc,
+                                                MiPunto p_frontal, MiPunto p_lateral){
+
+    
+    MiPunto solucion;
+
+
+    //1º. Puntos de fuga (F[])
+
+    //2º. Recta limitadoras de los campos
+
+
+
+    /****************************************/
+    //A. Recta perpendicular que pasa por p_frontal y p_lateral hasta la base de su trapecio (campo) (Pfc1, Plc1)
+
+    //B. Distancia
+
+    // B.a) Recta Pc1--F[0] --> r_aux
+
+    // B.b) Punto de corte entre r_aux y BC --> Pc2
+
+    // B.c) Calculo de distancias:
+
+    // B.c.1) d_Frontal = (9.0*d_Pfc2C)/d_BC
+
+    // B.c.2) d_Lateral = (18.0*d_Plc2C)/d_BC
+
+
+
+    return solucion;
+}
+
+
+
 
 
 
