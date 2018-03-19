@@ -94,3 +94,4 @@ vector<MiPunto> ABC(vector<MiPunto> puntos_campo);
 MiPunto PuntoTransformado(vector <MiPunto> frontal, vector <MiPunto> lateral, 
 									vector <MiPunto> f_abc, vector <MiPunto> l_abc,
 												MiPunto p_frontal, MiPunto p_lateral);
+MiPunto Extrapolacion(float d, vector<MiPunto> abc);

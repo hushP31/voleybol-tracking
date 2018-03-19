@@ -763,36 +763,121 @@ vector<MiPunto> ABC(vector<MiPunto> puntos_campo){
     return abc;
 }
 
+MiPunto Extrapolacion(float d, vector<MiPunto> abc){
+
+    MiPunto solucion;
+
+    float BC = DistanciaPuntos(abc[1], abc[2]);
+    Recta recta_bc = RectaDosPuntos(abc[1], abc[2]);
+    float d_trans = (d*BC)/9.0;
+    float a = (1+recta_bc.m*recta_bc.m);
+    float b = (2*recta_bc.m*recta_bc.k - 2*abc[2].x - 2*abc[2].y*recta_bc.m);
+    float c = -1*(d_trans*d_trans-abc[2].x*abc[2].x-abc[2].y*abc[2].y);
+    float aux = b*b - 4*a*c;
+
+    if(aux > 0 || aux == 0){
+        float raiz = sqrt(aux);  
+            
+        MiPunto p_aux1, p_aux2;
+
+        p_aux1.x = ((-1*b)+raiz)/(2*a);
+        p_aux1.y = recta_bc.m*p_aux1 + recta_bc.k;
+
+
+        p_aux2.x = ((-1*b)-raiz)/(2*a);
+        p_aux2.y = recta_bc.m*p_aux2 + recta_bc.k;
+
+        if(DistanciaPuntos(abc[1], p_aux1) < DistanciaPuntos(abc[1], p_aux2))
+            solucion = p_aux1;
+        else
+            solucion = p_aux2;
+    }
+
+    return solucion;
+}
 
 
 MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, 
-                                    vector <MiPunto> f_abc, vector <MiPunto> l_abc,
-                                                MiPunto p_frontal, MiPunto p_lateral){
+                                    vector <Recta> f_limite, vector <Recta> l_limite, 
+                                        vector <MiPunto> f_abc, vector <MiPunto> l_abc,
+                                            MiPunto p_frontal, MiPunto p_lateral,
+                                                vector <MiPunto> f_fuga, vector <MiPunto> l_fuga){
 
     
     MiPunto solucion;
+    Recta f_balon_bases, l_balon_bases, f_BC, l_BC;
+    MiPunto p_aux;
+    MiPunto f_corte_1b, f_corte_2B;
+    MiPunto l_corte_1b, l_corte_2B;
+
+    
+    //Frontal
+    p_aux.x = p_frontal.x;
+    p_aux.y = p_frontal.y + 20;
+
+    f_balon_bases = RectaDosPuntos(p_frontal, p_aux);
+
+    f_corte_1b = PuntoCorte(f_balon_bases, f_limite[1]);
+    f_corte_2B = PuntoCorte(f_balon_bases, f_limite[3]);
+
+    //Recta BC
+    f_BC = RectaDosPuntos(f_abc[1], f_abc[2]);
+
+    Recta f_aux_1b = RectaDosPuntos(f_corte_1b, f_fuga[0]);
+    Recta f_aux_2B = RectaDosPuntos(f_corte_2B, f_fuga[0]);
+
+    MiPunto f_bc_1b = PuntoCorte(f_aux_1b, f_BC);
+    MiPunto f_bc_2B = PuntoCorte(f_aux_2B, f_BC);
+
+    float f_C_bc1b = DistanciaPuntos(f_abc[2], f_bc_1b);
+    float f_C_bc2B = DistanciaPuntos(f_abc[2], f_bc_2B);
+
+    float f_dBC = DistanciaPuntos(f_abc[1], f_abc[2]);
+
+    float f_real_1b = (9.0*f_C_bc1b)/f_dBC;
+    float f_real_2B = (9.0*f_C_bc2B)/f_dBC;
 
 
-    //1º. Puntos de fuga (F[])
 
-    //2º. Recta limitadoras de los campos
+    //Lateral
+    p_aux.x = p_lateral.x;
+    p_aux.y = p_lateral.y + 20;
+
+    l_balon_bases = RectaDosPuntos(p_lateral, p_aux);
+
+    l_corte_1b = PuntoCorte(l_balon_bases, l_limite[1]);
+    l_corte_2B = PuntoCorte(l_balon_bases, l_limite[3]);
+
+    //Recta BC
+    l_BC = RectaDosPuntos(l_abc[1], l_abc[2]);
+
+    Recta l_aux_1b = RectaDosPuntos(l_corte_1b, l_fuga[0]);
+    Recta l_aux_2B = RectaDosPuntos(l_corte_2B, l_fuga[0]);
+
+    MiPunto l_bc_1b = PuntoCorte(l_aux_1b, l_BC);
+    MiPunto l_bc_2B = PuntoCorte(l_aux_2B, l_BC);
+
+    float l_C_bc1b = DistanciaPuntos(l_abc[2], l_bc_1b);
+    float l_C_bc2B = DistanciaPuntos(l_abc[2], l_bc_2B);
+
+    float l_dBC = DistanciaPuntos(l_abc[1], l_abc[2]);
 
 
+    //Considero el campo como un cuadrado de 9x9, para suelo en la solucion doblar el valor lateral.
+    float l_real_1b = (9.0*l_C_bc1b)/l_dBC;
+    float l_real_2B = (9.0*l_C_bc2B)/l_dBC;
 
-    /****************************************/
-    //A. Recta perpendicular que pasa por p_frontal y p_lateral hasta la base de su trapecio (campo) (Pfc1, Plc1)
 
-    //B. Distancia
+    //Extrapolar l_real_XY al campo frontal
 
-    // B.a) Recta Pc1--F[0] --> r_aux
+    // Calcular los puntos cuya distancia a f_abc[2] (C) sea l_real_1b y l_real_2B
+    // y además esté dentro del segmento que forman f_abc[1] y f_abc[2]
+    
+    MiPunto f_bc_l1b = Extrapolacion(l_real_1b, f_abc);
+    MiPunto f_bc_l2B = Extrapolacion(l_real_2B, f_abc);
 
-    // B.b) Punto de corte entre r_aux y BC --> Pc2
+    
 
-    // B.c) Calculo de distancias:
-
-    // B.c.1) d_Frontal = (9.0*d_Pfc2C)/d_BC
-
-    // B.c.2) d_Lateral = (18.0*d_Plc2C)/d_BC
 
 
 
