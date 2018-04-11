@@ -91,7 +91,13 @@ bool Desechable(MiPunto p, vector<MiPunto> v);
 vector<MiPunto> MaxMinRelativos(vector<MiPunto> v);
 void DrawParabola(vector<MiPunto> v);
 vector<MiPunto> ABC(vector<MiPunto> puntos_campo);
-MiPunto PuntoTransformado(vector <MiPunto> frontal, vector <MiPunto> lateral, 
-									vector <MiPunto> f_abc, vector <MiPunto> l_abc,
-												MiPunto p_frontal, MiPunto p_lateral);
+vector<MiPunto> PuntosDeFuga(vector<MiPunto> puntos_campo);
+MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, 
+                                    vector <Recta> f_limite, vector <Recta> l_limite, 
+                                        vector <MiPunto> f_abc, vector <MiPunto> l_abc,
+                                            MiPunto balon_frontal, MiPunto balon_lateral,
+                                                vector <MiPunto> f_fuga, vector <MiPunto> l_fuga, 
+                                                	Mat &f_cameraFeed, Mat &l_cameraFeed);
 MiPunto Extrapolacion(float d, vector<MiPunto> abc);
+void ImprimeMiPunto(MiPunto p);
+void ImprimeRecta(Recta r);

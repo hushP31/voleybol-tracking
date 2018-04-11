@@ -329,9 +329,8 @@ MiPunto searchForMovement(Mat thresholdImage, Mat &cameraFeed, char camara, vect
 
     			if(PuntosIguales(p_anterior, p2) && PuntosIguales(p_anterior, p3))
 					puntos_desechables.push_back(p_anterior);
-				else{
-
-		    		while((p_actual.x == -1) && (distancia_minima < 500)){
+				else
+		    		while((p_actual.x == -1) && (distancia_minima < 500))
 			    		for(int i=0; i<idx_conts_3.size(); i++){
 			    			objectBoundingRectangle = boundingRect(contours.at(idx_conts_3[i]));
 
@@ -361,8 +360,6 @@ MiPunto searchForMovement(Mat thresholdImage, Mat &cameraFeed, char camara, vect
 			    			}
 			    			distancia_minima+=5;
 			    		}
-		    		}
-		    	}
     		}
     	}
 		//update the objects positions by changing the 'theObject' array values
@@ -378,6 +375,12 @@ MiPunto searchForMovement(Mat thresholdImage, Mat &cameraFeed, char camara, vect
 	    point_sol.x = -1;
 	    point_sol.y = -1;
     }
+
+    int x = (int)point_sol.x;
+    int y = (int)point_sol.y;
+
+    circle( cameraFeed, Point(x,y), 15, Scalar(0,255,0), 2);
+
     //make some temp x and y variables so we dont have to type out so much
     putText(cameraFeed,"- Area: " + doubleToString(area_balon) , Point(50,900), 2, 1, Scalar(240,240,240), 2);
     putText(cameraFeed,"- Distancia: " + doubleToString(distancia_solucion) , Point(50,950), 2, 1, Scalar(240,240,240), 2);
@@ -557,7 +560,10 @@ int main(int argc, char* argv[]) {
         		
 				//TRANSFORMAR LOS PUNTOS DETECTADOS A PUNTOS REALES DE CAMPO DE JUEGO
             	
-
+            	//ImprimeMiPunto(point);
+            	//ImprimeMiPunto(pointL);
+            	MiPunto p = PuntoTransformadoSuelo( puntos, puntosL, pgroundF, pgroundL, frontal_abc, lateral_abc,
+		                                            			point, pointL, puntos_fugaF, puntos_fugaL, frame1, frame1L);
 
                 //Vista_Frontal();
         		Vista_Lateral(coordenadas_balon);
@@ -645,16 +651,16 @@ int main(int argc, char* argv[]) {
     	if(puntos.empty()){
 	        //Inicializar campo de juego
 	        //Frontal
-		    puntos.push_back(MiPunto(190, 842));
-		    puntos.push_back(MiPunto(1634, 875));
-		    puntos.push_back(MiPunto(1180, 668));
-		    puntos.push_back(MiPunto(660, 658));
-
+		    puntos.push_back(MiPunto(206, 839));
+		    puntos.push_back(MiPunto(670, 658));
+		    puntos.push_back(MiPunto(1175, 670));
+		    puntos.push_back(MiPunto(1614, 871));
+		    
 		    //Lateral
-		    puntosL.push_back(MiPunto(163, 821));
-		    puntosL.push_back(MiPunto(348, 684));
-		    puntosL.push_back(MiPunto(1855, 750));
-		    puntosL.push_back(MiPunto(1470, 645));
+		    puntosL.push_back(MiPunto(172, 818));
+		    puntosL.push_back(MiPunto(344, 687));
+		    puntosL.push_back(MiPunto(1477, 651));
+		    puntosL.push_back(MiPunto(1837, 748));
 		}
         
         if((puntos.size() == 4) && (puntosL.size() == 4) && imprime){
@@ -673,7 +679,9 @@ int main(int argc, char* argv[]) {
 		
 			frontal_abc = ABC(puntos);
     		lateral_abc = ABC(puntosL);
-			 
+			
+			puntos_fugaF = PuntosDeFuga(puntos);
+			puntos_fugaL = PuntosDeFuga(puntosL);			 
 
 			imprime = false;
         }

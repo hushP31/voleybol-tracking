@@ -56,7 +56,13 @@ Recta::Recta(double m1, double k1){
 	k = k1;
 }
 
+void ImprimeMiPunto(MiPunto p){
+    cout << "(" << p.x << ", " << p.y << ")  ";
+}
 
+void ImprimeRecta(Recta r){
+    cout << "y = " << r.m << " x + " << r.k << endl;
+}
 
 double Trunca(int n, double d){
 	int aux = d * pow(10, n);
@@ -124,16 +130,20 @@ Recta RectaDosPuntos( MiPunto p1, MiPunto p2){
 
     solucion.m = (1.0*(p2.y - p1.y)) / (1.0*(p2.x-p1.x));
     solucion.k =  -1.0*(p1.x*((p2.y-p1.y)/(1.0*(p2.x-p1.x))))+p1.y;
-    
+
+    //cout << "m: " << solucion.m << " k: " << solucion.k << endl;
+
 	return solucion;
 }
 
-MiPunto PuntoCorte (Recta r, Recta s){
+MiPunto PuntoCorte(Recta r, Recta s){
 	MiPunto solucion;
 	
 	solucion.x = ((r.k - s.k)/(s.m - r.m)*1.0);
     solucion.y = solucion.x*r.m + r.k*1.0;
-    	
+    	   
+    //cout << "( " << solucion.x << ", " << solucion.y << " ) \n";
+
 	return solucion;
 }
 
@@ -315,7 +325,6 @@ double Altura(vector<MiPunto> puntos, MiPunto point, MiPunto suelo){
 
 
 void DrawObject(Mat &cameraFeed, MiPunto p, MiPunto3D suelo){
-
 	int x = (int)p.x;
 	int y = (int)p.y;
 
@@ -672,6 +681,47 @@ void DrawParabola(vector<MiPunto> v){
 
 }
 
+vector <MiPunto> PuntosDeFuga(vector<MiPunto> puntos_campo){
+
+    vector<Recta> rectas_campo;
+    vector<MiPunto> fugas;
+    Recta diagonal1, diagonal2;
+    Recta auxiliar_fugas;
+
+
+    for(int i=0; i<4; i++)
+        rectas_campo.push_back(RectaDosPuntos(puntos_campo[i%4], puntos_campo[(i+1)%4]));
+
+    diagonal2 = RectaDosPuntos(puntos_campo[0], puntos_campo[2]);
+    diagonal1 = RectaDosPuntos(puntos_campo[1], puntos_campo[3]);
+
+    fugas.push_back(PuntoCorte(rectas_campo[0], rectas_campo[2]));
+    
+    MiPunto p1, p2;
+    p1.x = 0.0; p1.y = 0.0;
+    p2.x = 4.0; p2.y = 0.0;
+
+    /*
+    Triangulo formado por puntos_campo[0], fugas[0], puntos_campo[3]
+    */
+    Recta rr = PerpendicularPunto(rectas_campo[3], fugas[0]);
+    Recta aa = PerpendicularPunto(rr, fugas[0]);
+
+    auxiliar_fugas = ParalelaPunto(aa, fugas[0]);
+
+    fugas.push_back(PuntoCorte(auxiliar_fugas, diagonal1));
+    fugas.push_back(PuntoCorte(auxiliar_fugas, diagonal2));
+
+    fugas.push_back(PuntoCorte(diagonal1, diagonal2));
+    
+    //Recta perpendicular a rectas_campo[3] que pasa por fugas[0]
+    Recta perpendicular_aux = PerpendicularPunto(rectas_campo[3], fugas[0]);
+    fugas.push_back(PuntoCorte(rectas_campo[3], perpendicular_aux));
+
+    return fugas;
+}
+
+
 
 vector<MiPunto> ABC(vector<MiPunto> puntos_campo){
 
@@ -688,21 +738,10 @@ vector<MiPunto> ABC(vector<MiPunto> puntos_campo){
     bool err = false;
     bool err_aux = false;
 
-
     for(int i=0; i<4; i++)
         rectas_campo.push_back(RectaDosPuntos(puntos_campo[i%4], puntos_campo[(i+1)%4]));
 
-    diagonal2 = RectaDosPuntos(puntos_campo[0], puntos_campo[2]);
-    diagonal1 = RectaDosPuntos(puntos_campo[1], puntos_campo[3]);
-
-    fugas.push_back(PuntoCorte(rectas_campo[0], rectas_campo[2]));
-    auxiliar_fugas = ParalelaPunto(rectas_campo[1], fugas[0]);
-
-    fugas.push_back(PuntoCorte(auxiliar_fugas, diagonal1));
-    fugas.push_back(PuntoCorte(auxiliar_fugas, diagonal2));
-
-    fugas.push_back(PuntoCorte(RectaDosPuntos(puntos_campo[1], fugas[2]), 
-                                    RectaDosPuntos(puntos_campo[2], fugas[1])));
+    fugas = PuntosDeFuga(puntos_campo);
 
     //Recta que contiene a A.
     r = RectaDosPuntos(fugas[0], fugas[3]);
@@ -763,6 +802,7 @@ vector<MiPunto> ABC(vector<MiPunto> puntos_campo){
     return abc;
 }
 
+
 MiPunto Extrapolacion(float d, vector<MiPunto> abc){
 
     MiPunto solucion;
@@ -781,11 +821,11 @@ MiPunto Extrapolacion(float d, vector<MiPunto> abc){
         MiPunto p_aux1, p_aux2;
 
         p_aux1.x = ((-1*b)+raiz)/(2*a);
-        p_aux1.y = recta_bc.m*p_aux1 + recta_bc.k;
+        p_aux1.y = recta_bc.m*p_aux1.x + recta_bc.k;
 
 
         p_aux2.x = ((-1*b)-raiz)/(2*a);
-        p_aux2.y = recta_bc.m*p_aux2 + recta_bc.k;
+        p_aux2.y = recta_bc.m*p_aux2.x + recta_bc.k;
 
         if(DistanciaPuntos(abc[1], p_aux1) < DistanciaPuntos(abc[1], p_aux2))
             solucion = p_aux1;
@@ -800,86 +840,256 @@ MiPunto Extrapolacion(float d, vector<MiPunto> abc){
 MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, 
                                     vector <Recta> f_limite, vector <Recta> l_limite, 
                                         vector <MiPunto> f_abc, vector <MiPunto> l_abc,
-                                            MiPunto p_frontal, MiPunto p_lateral,
-                                                vector <MiPunto> f_fuga, vector <MiPunto> l_fuga){
+                                            MiPunto balon_frontal, MiPunto balon_lateral,
+                                                vector <MiPunto> f_fuga, vector <MiPunto> l_fuga, 
+                                                    Mat &f_cameraFeed, Mat &l_cameraFeed ){
+    /*
+    cout << "F_ABC:\n";
+    for(int i=0; i<f_abc.size(); i++)
+        ImprimeMiPunto(f_abc[i]);
+    cout << endl;
 
+    cout << "F_FUGAS:\n";
+    for(int i=0; i<f_fuga.size(); i++)
+        ImprimeMiPunto(f_fuga[i]);
+    cout << endl;
+    */
     
     MiPunto solucion;
-    Recta f_balon_bases, l_balon_bases, f_BC, l_BC;
+    Recta f_referencia_9, f_referencia_par;
+    Recta l_referencia_18, l_referencia_par;
+    MiPunto f_ref_aux, l_ref_aux;
+    Recta f_balon, l_balon;
+
+    Recta f_bc = RectaDosPuntos(f_abc[1], f_abc[2]);
+    Recta l_bc = RectaDosPuntos(l_abc[1], l_abc[2]);
+
     MiPunto p_aux;
-    MiPunto f_corte_1b, f_corte_2B;
-    MiPunto l_corte_1b, l_corte_2B;
+    MiPunto p_aux2;
 
+    p_aux.x = 1.0;
+    p_aux.y = 2.0;
+
+    p_aux2.x = 2.0;
+    p_aux2.y = 2.0;
+
+    Recta paralela_aux_f_l = f_limite[3];
     
-    //Frontal
-    p_aux.x = p_frontal.x;
-    p_aux.y = p_frontal.y + 20;
+    /** FRONTAL **/
+    //0.A. Crear recta de referencia real desde f_abc[2] (C).
+    f_ref_aux.x = f_abc[2].x + 0.01;
+    f_ref_aux.y = f_abc[2].y - 9.0;
 
-    f_balon_bases = RectaDosPuntos(p_frontal, p_aux);
-
-    f_corte_1b = PuntoCorte(f_balon_bases, f_limite[1]);
-    f_corte_2B = PuntoCorte(f_balon_bases, f_limite[3]);
-
-    //Recta BC
-    f_BC = RectaDosPuntos(f_abc[1], f_abc[2]);
-
-    Recta f_aux_1b = RectaDosPuntos(f_corte_1b, f_fuga[0]);
-    Recta f_aux_2B = RectaDosPuntos(f_corte_2B, f_fuga[0]);
-
-    MiPunto f_bc_1b = PuntoCorte(f_aux_1b, f_BC);
-    MiPunto f_bc_2B = PuntoCorte(f_aux_2B, f_BC);
-
-    float f_C_bc1b = DistanciaPuntos(f_abc[2], f_bc_1b);
-    float f_C_bc2B = DistanciaPuntos(f_abc[2], f_bc_2B);
-
-    float f_dBC = DistanciaPuntos(f_abc[1], f_abc[2]);
-
-    float f_real_1b = (9.0*f_C_bc1b)/f_dBC;
-    float f_real_2B = (9.0*f_C_bc2B)/f_dBC;
-
-
-
-    //Lateral
-    p_aux.x = p_lateral.x;
-    p_aux.y = p_lateral.y + 20;
-
-    l_balon_bases = RectaDosPuntos(p_lateral, p_aux);
-
-    l_corte_1b = PuntoCorte(l_balon_bases, l_limite[1]);
-    l_corte_2B = PuntoCorte(l_balon_bases, l_limite[3]);
-
-    //Recta BC
-    l_BC = RectaDosPuntos(l_abc[1], l_abc[2]);
-
-    Recta l_aux_1b = RectaDosPuntos(l_corte_1b, l_fuga[0]);
-    Recta l_aux_2B = RectaDosPuntos(l_corte_2B, l_fuga[0]);
-
-    MiPunto l_bc_1b = PuntoCorte(l_aux_1b, l_BC);
-    MiPunto l_bc_2B = PuntoCorte(l_aux_2B, l_BC);
-
-    float l_C_bc1b = DistanciaPuntos(l_abc[2], l_bc_1b);
-    float l_C_bc2B = DistanciaPuntos(l_abc[2], l_bc_2B);
-
-    float l_dBC = DistanciaPuntos(l_abc[1], l_abc[2]);
-
-
-    //Considero el campo como un cuadrado de 9x9, para suelo en la solucion doblar el valor lateral.
-    float l_real_1b = (9.0*l_C_bc1b)/l_dBC;
-    float l_real_2B = (9.0*l_C_bc2B)/l_dBC;
-
-
-    //Extrapolar l_real_XY al campo frontal
-
-    // Calcular los puntos cuya distancia a f_abc[2] (C) sea l_real_1b y l_real_2B
-    // y además esté dentro del segmento que forman f_abc[1] y f_abc[2]
+    f_referencia_9 = RectaDosPuntos(f_abc[2], f_ref_aux);
     
-    MiPunto f_bc_l1b = Extrapolacion(l_real_1b, f_abc);
-    MiPunto f_bc_l2B = Extrapolacion(l_real_2B, f_abc);
+    //0.B. Crear recta desde ref_aux hasta f_abc[1] (B)
+    f_referencia_par = RectaDosPuntos(f_abc[1], f_ref_aux);
 
+    // 1. Crear recta perpendicular al campo que pase por el punto del balón 
+    //    y calcular los puntos de corte de dicha recta con las bases del 
+    //    trapecio que forma el campo.
+    f_balon = ParalelaPunto(RectaDosPuntos(f_fuga[0], f_fuga[4]), balon_frontal);
+    MiPunto f_c1 = PuntoCorte(f_balon, f_limite[1]);
+    MiPunto f_c3 = PuntoCorte(f_balon, f_limite[3]);
     
+    int x11 = (int)f_c1.x;
+    int y11 = (int)f_c1.y;
+    int x33 = (int)f_c3.x;
+    int y33 = (int)f_c3.y;
+    line(f_cameraFeed,Point(x11,y11),Point(x33,y33),Scalar(0,255,255),1);
+
+    //2. Hallar el punto real de f_c1 y f_c3. --> f_c1_real, f_c3_real
+
+    //  2.A. crear rectas desde el punto de fuga 0 y f_c1 y f_c3.
+        Recta f_c1_0 = RectaDosPuntos(f_fuga[0], f_c1);
+        Recta f_c3_0 = RectaDosPuntos(f_fuga[0], f_c3);
+
+    //  2.B. hallar puntos de corte entre las rectas anteriores y f_bc
+        MiPunto f_c1_bc = PuntoCorte(f_c1_0, f_bc);
+        MiPunto f_c3_bc = PuntoCorte(f_c3_0, f_bc);
+
+    //  2.C. Crear recta paralela a f_referencia_par que pase por los puntos de corte anteriores
+        Recta f_c1_par = ParalelaPunto( f_referencia_par, f_c1_bc);
+        Recta f_c3_par = ParalelaPunto( f_referencia_par, f_c3_bc);
+
+    //  2.D. Hallar puntos de corte de las rectas anteriores con la recta f_referencia_9
+        MiPunto f_c1_real = PuntoCorte(f_c1_par, f_referencia_9);
+        MiPunto f_c3_real = PuntoCorte(f_c3_par, f_referencia_9);
+
+    //  Extrapolar
+        f_c1_real.y = f_abc[2].y - f_c1_real.y;
+        f_c1_real.x = 18;
+
+        f_c3_real.y = f_abc[2].y - f_c3_real.y;
+        f_c3_real.x = 0;
+
+        putText(f_cameraFeed, doubleToString(f_c1_real.y) , Point(x11,y11 + 10), 1, 1, Scalar(240,240,240), 1);
+        putText(f_cameraFeed, doubleToString(f_c3_real.y) , Point(x33,y33 - 10), 1, 1, Scalar(240,240,240), 1);
+
+    /** LATERAL **/
+    //0.A. Crear recta de referencia real desde l_abc[2] (C).
+    l_ref_aux.x = l_abc[2].x + 0.01;
+    l_ref_aux.y = l_abc[2].y - 18.0;
+    l_referencia_18 = RectaDosPuntos(l_abc[2], l_ref_aux);
+    
+    //0.B. Crear recta desde ref_aux hasta f_abc[1] (B)
+    l_referencia_par = RectaDosPuntos(l_abc[1], l_ref_aux);
+
+    // 1. Crear recta perpendicular al campo que pase por el punto del balón 
+    //    y calcular los puntos de corte de dicha recta con las bases del 
+    //    trapecio que forma el campo.
 
 
+    l_balon = ParalelaPunto(RectaDosPuntos(l_fuga[0], l_fuga[4]), balon_lateral);
+    MiPunto l_c1 = PuntoCorte(l_balon, l_limite[1]);
+    MiPunto l_c3 = PuntoCorte(l_balon, l_limite[3]);
 
+    int x1 = (int)l_c1.x;
+    int y1 = (int)l_c1.y;
+    int x3 = (int)l_c3.x;
+    int y3 = (int)l_c3.y;
+    line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+    //2. Hallar el punto real de l_c1 y l_c3. --> l_c1_real, l_c3_real
+
+    //  2.A. crear rectas desde el punto de fuga 0 y l_c1 y l_c3.
+        Recta l_c1_0 = RectaDosPuntos(l_fuga[0], l_c1);
+        Recta l_c3_0 = RectaDosPuntos(l_fuga[0], l_c3);
+    
+    //  2.B. hallar puntos de corte entre las rectas anteriores y l_bc
+        MiPunto l_c1_bc = PuntoCorte(l_c1_0, l_bc);
+        MiPunto l_c3_bc = PuntoCorte(l_c3_0, l_bc);
+
+    //  2.C. Crear recta paralela a l_referencia_par que pase por los puntos de corte anteriores
+        Recta l_c1_par = ParalelaPunto(l_referencia_par, l_c1_bc);
+        Recta l_c3_par = ParalelaPunto(l_referencia_par, l_c3_bc);
+
+    //  2.D. Hallar puntos de corte de las rectas anteriores con la recta l_referencia_9
+        MiPunto l_c1_real = PuntoCorte(l_c1_par, l_referencia_18);
+        MiPunto l_c3_real = PuntoCorte(l_c3_par, l_referencia_18);
+
+    //  Extrapolar
+        l_c1_real.y = l_abc[2].y - l_c1_real.y;
+        l_c1_real.x = 0;
+
+        l_c3_real.y = l_abc[2].y - l_c3_real.y;
+        l_c3_real.x = 9;
+    
+        putText(l_cameraFeed, doubleToString(l_c1_real.y) , Point(x1,y1 + 10), 1, 1, Scalar(240,240,240), 1);
+        putText(l_cameraFeed, doubleToString(l_c3_real.y) , Point(x3,y3 - 10), 1, 1, Scalar(240,240,240), 1);
+
+        
+
+
+        //Recta de ayuda.
+        Recta t = RectaDosPuntos(l_fuga[0], l_fuga[3]);
+        MiPunto aux1 = PuntoCorte(t, l_limite[1]);
+        MiPunto aux2 = PuntoCorte(t, l_limite[3]);
+
+        x1 = (int)l_fuga[0].x;
+        y1 = (int)l_fuga[0].y;
+        x3 = (int)aux2.x;
+        y3 = (int)aux2.y;
+        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+        for(int i=0; i<lateral.size(); i++){
+            x1 = (int)lateral[i].x;
+            y1 = (int)lateral[i].y;
+            x3 = (int)lateral[(i+1)%4].x;
+            y3 = (int)lateral[(i+1)%4].y;
+
+            line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+        }
+
+        x1 = (int)l_fuga[0].x;
+        y1 = (int)l_fuga[0].y;
+        x3 = (int)lateral[0].x;
+        y3 = (int)lateral[0].y;
+        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+        x3 = (int)lateral[3].x;
+        y3 = (int)lateral[3].y;
+        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+        x1 = (int)l_fuga[1].x;
+        y1 = (int)l_fuga[1].y;
+        x3 = (int)lateral[2].x;
+        y3 = (int)lateral[2].y;
+        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+        x1 = (int)l_fuga[2].x;
+        y1 = (int)l_fuga[2].y;
+        x3 = (int)lateral[1].x;
+        y3 = (int)lateral[1].y;
+        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+        x1 = (int)lateral[3].x;
+        y1 = (int)lateral[3].y;
+        x3 = (int)lateral[1].x;
+        y3 = (int)lateral[1].y;
+        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+        x1 = (int)lateral[2].x;
+        y1 = (int)lateral[2].y;
+        x3 = (int)lateral[0].x;
+        y3 = (int)lateral[0].y;
+        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+
+        //Recta de ayuda.
+        t = RectaDosPuntos(f_fuga[0], f_fuga[3]);
+        aux1 = PuntoCorte(t, f_limite[1]);
+        aux2 = PuntoCorte(t, f_limite[3]);
+
+        x1 = (int)f_fuga[0].x;
+        y1 = (int)f_fuga[0].y;
+        x3 = (int)aux2.x;
+        y3 = (int)aux2.y;
+        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+        for(int i=0; i<frontal.size(); i++){
+            x1 = (int)frontal[i].x;
+            y1 = (int)frontal[i].y;
+            x3 = (int)frontal[(i+1)%4].x;
+            y3 = (int)frontal[(i+1)%4].y;
+
+            line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+        }
+
+        x1 = (int)f_fuga[0].x;
+        y1 = (int)f_fuga[0].y;
+        x3 = (int)frontal[0].x;
+        y3 = (int)frontal[0].y;
+        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+        x3 = (int)frontal[3].x;
+        y3 = (int)frontal[3].y;
+        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+        x1 = (int)f_fuga[1].x;
+        y1 = (int)f_fuga[1].y;
+        x3 = (int)frontal[2].x;
+        y3 = (int)frontal[2].y;
+        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+        x1 = (int)f_fuga[2].x;
+        y1 = (int)f_fuga[2].y;
+        x3 = (int)frontal[1].x;
+        y3 = (int)frontal[1].y;
+        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+
+        x1 = (int)frontal[3].x;
+        y1 = (int)frontal[3].y;
+        x3 = (int)frontal[1].x;
+        y3 = (int)frontal[1].y;
+        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+        x1 = (int)frontal[2].x;
+        y1 = (int)frontal[2].y;
+        x3 = (int)frontal[0].x;
+        y3 = (int)frontal[0].y;
+        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
 
     return solucion;
 }
