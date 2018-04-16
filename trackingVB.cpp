@@ -153,7 +153,7 @@ MiPunto searchForMovement(Mat thresholdImage, Mat &cameraFeed, char camara, vect
    		altura_minima = r.m*x+r.k;
    		altura_minima-=d;
 
-		line(cameraFeed, Point((int)0, (int)altura_minima), Point((int)1900,(int)altura_minima),Scalar(0,255,0),3);
+		//line(cameraFeed, Point((int)0, (int)altura_minima), Point((int)1900,(int)altura_minima),Scalar(0,255,0),3);
    	}
 	else{
 		altura_minima = -1;
@@ -381,11 +381,16 @@ MiPunto searchForMovement(Mat thresholdImage, Mat &cameraFeed, char camara, vect
 
     circle( cameraFeed, Point(x,y), 15, Scalar(0,255,0), 2);
 
+    int xx = cameraFeed.size().width;
+    int yy = cameraFeed.size().height;
+
+    rectangle(cameraFeed, Point(xx-500, 0), Point(xx, 300), Scalar(230,60,60), -2); //, 8, 0);
+
     //make some temp x and y variables so we dont have to type out so much
-    putText(cameraFeed,"- Area: " + doubleToString(area_balon) , Point(50,900), 2, 1, Scalar(240,240,240), 2);
-    putText(cameraFeed,"- Distancia: " + doubleToString(distancia_solucion) , Point(50,950), 2, 1, Scalar(240,240,240), 2);
-    putText(cameraFeed,"- Actual: " + doubleToString(point_sol.x) + ", " + doubleToString(point_sol.y) , Point(50,1000), 2, 1, Scalar(240,240,240), 2);
-    putText(cameraFeed,"- Anterior: " + doubleToString(p_anterior.x) + ", " + doubleToString(p_anterior.y) , Point(50,1050), 2, 1, Scalar(240,240,240), 2);
+    putText(cameraFeed,"- Area: " + doubleToString(area_balon) , Point(xx-450,60), 2, 1, Scalar(240,240,240), 1);
+    putText(cameraFeed,"- Distancia: " + doubleToString(distancia_solucion) , Point(xx-450,110), 2, 1, Scalar(240,240,240), 1);
+    putText(cameraFeed,"- Actual: " + doubleToString(point_sol.x) + ", " + doubleToString(point_sol.y) , Point(xx-450,160), 2, 1, Scalar(240,240,240), 1);
+    putText(cameraFeed,"- Anterior: " + doubleToString(p_anterior.x) + ", " + doubleToString(p_anterior.y) , Point(xx-450,210), 2, 1, Scalar(240,240,240), 1);
 
 
     return point_sol;

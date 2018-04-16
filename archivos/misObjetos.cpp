@@ -978,19 +978,90 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
         putText(l_cameraFeed, doubleToString(l_c1_real.y) , Point(x1,y1 + 10), 1, 1, Scalar(240,240,240), 1);
         putText(l_cameraFeed, doubleToString(l_c3_real.y) , Point(x3,y3 - 10), 1, 1, Scalar(240,240,240), 1);
 
+    
+        /********************* creacion de recta de corte **/
+        //FRONTAL
+
+        //puntos lateral: 
+        //  l_c1_real.x = 0
+        //  l_c1_real.y = xxx
+        //  l_c3_real.x = 9
+        //  l_c3_real.y = xxx
+
+        //1. Convertir puntos laterales al plano frontal.
+        MiPunto lc_c1_real, lc_c3_real, lc_c1, lc_c3, lc_solucion;
+        Recta lc_c1_bc, lc_c3_bc, lc_sol_1;
+
+        lc_c1_real.x = f_abc[2].x;
+        lc_c1_real.y = f_abc[2].y - (l_c1_real.y)/2.0;
+
+        lc_c3_real.x = f_abc[2].x;
+        lc_c3_real.y = f_abc[2].y - (l_c3_real.y)/2.0;
+
+        lc_c1_bc = ParalelaPunto(f_referencia_par, lc_c1_real);
+        lc_c3_bc = ParalelaPunto(f_referencia_par, lc_c3_real);
+
+        lc_c1 = PuntoCorte(RectaDosPuntos(f_abc[1], f_abc[2]), lc_c1_bc);
+        lc_c3 = PuntoCorte(RectaDosPuntos(f_abc[1], f_abc[2]), lc_c3_bc);
+
+        lc_c1_bc = RectaDosPuntos(lc_c1, f_fuga[0]);
+        lc_c3_bc = RectaDosPuntos(lc_c3, f_fuga[0]);
+
+        lc_c1 = PuntoCorte(lc_c1_bc, f_limite[3]);
+        lc_c3 = PuntoCorte(lc_c3_bc, f_limite[1]);
+
+        lc_c1_bc = RectaDosPuntos(f_fuga[1], lc_c1);
+        lc_c3_bc = RectaDosPuntos(f_fuga[1], lc_c3);
+
+        lc_c1 = PuntoCorte(lc_c1_bc, f_limite[0]);
+        lc_c3 = PuntoCorte(lc_c3_bc, f_limite[2]);
+
+        lc_solucion = PuntoCorte(f_balon, RectaDosPuntos(lc_c1, lc_c3));
+        lc_sol_1 = RectaDosPuntos(lc_solucion, f_fuga[0]);
+
+        x3 = (int)lc_solucion.x;
+        y3 = (int)lc_solucion.y;
+        x1 = (int)f_fuga[0].x;
+        y1 = (int)f_fuga[0].y;
+
+        lc_solucion = PuntoCorte(lc_sol_1, RectaDosPuntos(f_abc[1], f_abc[2]));
+        lc_sol_1 = ParalelaPunto(f_referencia_par, lc_solucion);
+
+        lc_solucion = PuntoCorte(lc_sol_1, f_referencia_9);
         
 
+        /****************** SOLUCION.X ******************/
+        solucion.x = Trunca(2, f_abc[2].y - lc_solucion.y);
+        /************************************************/
 
+
+        rectangle(f_cameraFeed, Point(x3-50, y3-20), Point(x3+50, y3+20), Scalar(240,0,0), -2); //, 8, 0);
+        putText(f_cameraFeed, doubleToString(lc_solucion.y) ,Point(x3-35,y3+13), 1, 2, Scalar(240,240,240), 1);
+        
+        x1 = (int)lc_c1.x;
+        y1 = (int)lc_c1.y;
+        x3 = (int)lc_c3.x;
+        y3 = (int)lc_c3.y;
+        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),2);
+
+
+        //2. Convertir puntos frontales al plano lateral.
+        
+        /****************** SOLUCION.X ******************/
+        
+        /************************************************/
+
+        /**********************************************************************/
         //Recta de ayuda.
         Recta t = RectaDosPuntos(l_fuga[0], l_fuga[3]);
         MiPunto aux1 = PuntoCorte(t, l_limite[1]);
         MiPunto aux2 = PuntoCorte(t, l_limite[3]);
 
-        x1 = (int)l_fuga[0].x;
-        y1 = (int)l_fuga[0].y;
+        x1 = (int)aux1.x;
+        y1 = (int)aux1.y;
         x3 = (int)aux2.x;
         y3 = (int)aux2.y;
-        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),2);
 
         for(int i=0; i<lateral.size(); i++){
             x1 = (int)lateral[i].x;
@@ -998,54 +1069,20 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
             x3 = (int)lateral[(i+1)%4].x;
             y3 = (int)lateral[(i+1)%4].y;
 
-            line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+            line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),2);
         }
 
-        x1 = (int)l_fuga[0].x;
-        y1 = (int)l_fuga[0].y;
-        x3 = (int)lateral[0].x;
-        y3 = (int)lateral[0].y;
-        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
-
-        x3 = (int)lateral[3].x;
-        y3 = (int)lateral[3].y;
-        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
-
-        x1 = (int)l_fuga[1].x;
-        y1 = (int)l_fuga[1].y;
-        x3 = (int)lateral[2].x;
-        y3 = (int)lateral[2].y;
-        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
-
-        x1 = (int)l_fuga[2].x;
-        y1 = (int)l_fuga[2].y;
-        x3 = (int)lateral[1].x;
-        y3 = (int)lateral[1].y;
-        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
-
-        x1 = (int)lateral[3].x;
-        y1 = (int)lateral[3].y;
-        x3 = (int)lateral[1].x;
-        y3 = (int)lateral[1].y;
-        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
-
-        x1 = (int)lateral[2].x;
-        y1 = (int)lateral[2].y;
-        x3 = (int)lateral[0].x;
-        y3 = (int)lateral[0].y;
-        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
-
-
+        
         //Recta de ayuda.
         t = RectaDosPuntos(f_fuga[0], f_fuga[3]);
         aux1 = PuntoCorte(t, f_limite[1]);
         aux2 = PuntoCorte(t, f_limite[3]);
 
-        x1 = (int)f_fuga[0].x;
-        y1 = (int)f_fuga[0].y;
+        x1 = (int)aux1.x;
+        y1 = (int)aux1.y;
         x3 = (int)aux2.x;
         y3 = (int)aux2.y;
-        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),2);
 
         for(int i=0; i<frontal.size(); i++){
             x1 = (int)frontal[i].x;
@@ -1053,43 +1090,14 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
             x3 = (int)frontal[(i+1)%4].x;
             y3 = (int)frontal[(i+1)%4].y;
 
-            line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+            line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),2);
         }
 
-        x1 = (int)f_fuga[0].x;
-        y1 = (int)f_fuga[0].y;
-        x3 = (int)frontal[0].x;
-        y3 = (int)frontal[0].y;
-        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+    int xx = f_cameraFeed.size().width;
+    putText(f_cameraFeed,"- X: " + doubleToString(solucion.x) + " Y: " + doubleToString(solucion.y) , Point(xx-450,260), 2, 1, Scalar(240,240,240), 1);
+    xx = l_cameraFeed.size().width;
+    putText(l_cameraFeed,"- X: " + doubleToString(solucion.x) + " Y: " + doubleToString(solucion.y) , Point(xx-450,260), 2, 1, Scalar(240,240,240), 1);
 
-        x3 = (int)frontal[3].x;
-        y3 = (int)frontal[3].y;
-        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
-
-        x1 = (int)f_fuga[1].x;
-        y1 = (int)f_fuga[1].y;
-        x3 = (int)frontal[2].x;
-        y3 = (int)frontal[2].y;
-        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
-
-        x1 = (int)f_fuga[2].x;
-        y1 = (int)f_fuga[2].y;
-        x3 = (int)frontal[1].x;
-        y3 = (int)frontal[1].y;
-        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
-
-
-        x1 = (int)frontal[3].x;
-        y1 = (int)frontal[3].y;
-        x3 = (int)frontal[1].x;
-        y3 = (int)frontal[1].y;
-        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
-
-        x1 = (int)frontal[2].x;
-        y1 = (int)frontal[2].y;
-        x3 = (int)frontal[0].x;
-        y3 = (int)frontal[0].y;
-        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
 
     return solucion;
 }
