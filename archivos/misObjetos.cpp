@@ -1034,10 +1034,11 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
         solucion.x = Trunca(2, f_abc[2].y - lc_solucion.y);
         /************************************************/
 
+        x1 = (int)balon_frontal.x;
+        y1 = (int)balon_frontal.y;
+        rectangle(f_cameraFeed, Point(x3-15, y3-10), Point(x3+15, y3+10), Scalar(240,0,0), 1);
+        line(f_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
 
-        rectangle(f_cameraFeed, Point(x3-50, y3-20), Point(x3+50, y3+20), Scalar(240,0,0), -2); //, 8, 0);
-        putText(f_cameraFeed, doubleToString(lc_solucion.y) ,Point(x3-35,y3+13), 1, 2, Scalar(240,240,240), 1);
-        
         x1 = (int)lc_c1.x;
         y1 = (int)lc_c1.y;
         x3 = (int)lc_c3.x;
@@ -1046,10 +1047,63 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
 
 
         //2. Convertir puntos frontales al plano lateral.
+
+        lc_c1_real.x = l_abc[2].x;
+        lc_c1_real.y = l_abc[2].y - (9-f_c1_real.y)*2.0;
+
+        lc_c3_real.x = l_abc[2].x;
+        lc_c3_real.y = l_abc[2].y - (9-f_c3_real.y)*2.0;
+
+        lc_c1_bc = ParalelaPunto(l_referencia_par, lc_c1_real);
+        lc_c3_bc = ParalelaPunto(l_referencia_par, lc_c3_real);
+
+        lc_c1 = PuntoCorte(RectaDosPuntos(l_abc[1], l_abc[2]), lc_c1_bc);
+        lc_c3 = PuntoCorte(RectaDosPuntos(l_abc[1], l_abc[2]), lc_c3_bc);
+
+        lc_c1_bc = RectaDosPuntos(lc_c1, l_fuga[0]);
+        lc_c3_bc = RectaDosPuntos(lc_c3, l_fuga[0]);
+
+        lc_c1 = PuntoCorte(lc_c1_bc, l_limite[3]);
+        lc_c3 = PuntoCorte(lc_c3_bc, l_limite[1]);
+
+        lc_c1_bc = RectaDosPuntos(l_fuga[1], lc_c1);
+        lc_c3_bc = RectaDosPuntos(l_fuga[1], lc_c3);
+
+        lc_c1 = PuntoCorte(lc_c1_bc, l_limite[0]);
+        lc_c3 = PuntoCorte(lc_c3_bc, l_limite[2]);
+
+        lc_solucion = PuntoCorte(l_balon, RectaDosPuntos(lc_c1, lc_c3));
+        lc_sol_1 = RectaDosPuntos(lc_solucion, l_fuga[0]);
+
+        x3 = (int)lc_solucion.x;
+        y3 = (int)lc_solucion.y;
+        x1 = (int)l_fuga[0].x;
+        y1 = (int)l_fuga[0].y;
+
+        lc_solucion = PuntoCorte(lc_sol_1, RectaDosPuntos(l_abc[1], l_abc[2]));
+        lc_sol_1 = ParalelaPunto(l_referencia_par, lc_solucion);
+
+        lc_solucion = PuntoCorte(lc_sol_1, l_referencia_18);
         
+
         /****************** SOLUCION.X ******************/
-        
+        solucion.y = Trunca(2, l_abc[2].y - lc_solucion.y);
         /************************************************/
+
+        x1 = (int)balon_lateral.x;
+        y1 = (int)balon_lateral.y;
+        rectangle(l_cameraFeed, Point(x3-15, y3-10), Point(x3+15, y3+10), Scalar(240,0,0), 1);
+        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),1);
+
+        x1 = (int)lc_c1.x;
+        y1 = (int)lc_c1.y;
+        x3 = (int)lc_c3.x;
+        y3 = (int)lc_c3.y;
+        line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),2);
+
+
+
+
 
         /**********************************************************************/
         //Recta de ayuda.
