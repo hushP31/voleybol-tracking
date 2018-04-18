@@ -837,12 +837,10 @@ MiPunto Extrapolacion(float d, vector<MiPunto> abc){
 }
 
 
-MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, 
-                                    vector <Recta> f_limite, vector <Recta> l_limite, 
-                                        vector <MiPunto> f_abc, vector <MiPunto> l_abc,
-                                            MiPunto balon_frontal, MiPunto balon_lateral,
-                                                vector <MiPunto> f_fuga, vector <MiPunto> l_fuga, 
-                                                    Mat &f_cameraFeed, Mat &l_cameraFeed ){
+MiPunto3D PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, vector <Recta> f_limite, vector <Recta> l_limite, 
+                                        vector <MiPunto> f_abc, vector <MiPunto> l_abc, MiPunto balon_frontal, MiPunto balon_lateral,
+                                                vector <MiPunto> f_fuga, vector <MiPunto> l_fuga, Mat &f_cameraFeed, Mat &l_cameraFeed )
+{
     /*
     cout << "F_ABC:\n";
     for(int i=0; i<f_abc.size(); i++)
@@ -855,7 +853,8 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
     cout << endl;
     */
     
-    MiPunto solucion;
+    MiPunto3D solucion;
+    MiPunto suelo_balon;
     Recta f_referencia_9, f_referencia_par;
     Recta l_referencia_18, l_referencia_par;
     MiPunto f_ref_aux, l_ref_aux;
@@ -1017,6 +1016,14 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
         lc_c3 = PuntoCorte(lc_c3_bc, f_limite[2]);
 
         lc_solucion = PuntoCorte(f_balon, RectaDosPuntos(lc_c1, lc_c3));
+
+        /*
+        suelo del balon para poder calcular la altura del balon
+        Se hace desde el plano frontal ya que es el que menor error puede 
+        producir por la situacion de la camara
+        */
+        suelo_balon = lc_solucion;
+
         lc_sol_1 = RectaDosPuntos(lc_solucion, f_fuga[0]);
 
         x3 = (int)lc_solucion.x;
@@ -1086,6 +1093,7 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
         lc_solucion = PuntoCorte(lc_sol_1, l_referencia_18);
         
 
+        suelo_balon.y = lc_solucion.y;
         /****************** SOLUCION.X ******************/
         solucion.y = Trunca(2, l_abc[2].y - lc_solucion.y);
         /************************************************/
@@ -1100,10 +1108,6 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
         x3 = (int)lc_c3.x;
         y3 = (int)lc_c3.y;
         line(l_cameraFeed,Point(x1,y1),Point(x3,y3),Scalar(0,255,255),2);
-
-
-
-
 
         /**********************************************************************/
         //Recta de ayuda.
@@ -1151,6 +1155,63 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
     putText(f_cameraFeed,"- X: " + doubleToString(solucion.x) + " Y: " + doubleToString(solucion.y) , Point(xx-450,260), 2, 1, Scalar(240,240,240), 1);
     xx = l_cameraFeed.size().width;
     putText(l_cameraFeed,"- X: " + doubleToString(solucion.x) + " Y: " + doubleToString(solucion.y) , Point(xx-450,260), 2, 1, Scalar(240,240,240), 1);
+
+    cout << "Suelo balon : " << suelo_balon.x << ", " << suelo_balon.y << " - " << balon_frontal.x << ", " << balon_frontal.y << endl;
+
+
+    /****************************************************************************
+    Pasos para calcular la altura.
+        0. central = Recta(f_fuga[0], Centro)
+
+    A1. Si el punto no está en el centro.
+        1.  r1 = Recta(f_fuga[0], suelo_balon)
+        2.  P = PuntoCorte(r, Recta(f_abc[1], f_abc[2]))
+        3.  dist = Distancia(f_abc[2], P)
+        4.  ¿P'? -> Distancia(f_abc[2], P) == Distancia(f_abc[1], P')
+        5.  r2 = Recta(P', f_fuga[0]).
+        6a.
+            Centro = PuntoCorte(Recta(frontal[0], frontal[2]),Recta(frontal[1], frontal[3]))
+        6b.
+            P_centro = PuntoCorte(Recta(frontal[0], suelo_balon), central)
+        7.  suelo_balon_simetrico = PuntoCorte(r2, Recta(frontal[3], P_centro))
+        8.  recta_suelo_balon = Recta(suelo_balon, suelo_balon_simetrico);
+    ------------------------------------------------------------------------------
+    
+    A2. Si el balon está en el centro, si pertenece a la recta 'central'  
+        1a. 
+            P1 = PuntoCorte(Recta(f_fuga[1], suelo_balon), f_limite[3])
+        1b. 
+            P2 = PuntoCorte(Recta(f_fuga[2], suelo_balon), f_limite[3])
+        2a. 
+            r1 = Recta(P1, f_fuga[0])
+        2b.
+            r2 = Recta(P2, f_fuga[0])
+        3a.
+            P22 = PuntoCorte(r2, Recta(f_fuga[1], suelo_balon))
+        3b.
+            P11 = PuntoCorte(r1, Recta(f_fuga[2], suelo_balon))
+        4.  r3 = Recta(P22, P11)
+        5.  P00 = PuntoCorte(central, r3)
+        6.  Pc0 = PuntoCorte(Recta(P1, P0), Recta(PuntoCorte(central, f_limite[3]), P11))
+        
+        7.  recta_suelo_balon = Recta(suelo_balon, Pc0)
+    -------------------------------------------------------------------------------
+    B.  Calcular metro realtivo  
+
+        1.  Puntos de corte en los laterales.
+                1a. 
+                    P1 = PuntoCorte(recta_suelo_balon, f_limite[0])
+                1b. 
+                    P2 = PuntoCorte(recta_suelo_balon, f_limite[2])
+        2.  metro_relativo = Distancia(P1, P2)/9.0;
+    
+    C.  Calcular altura del balon.
+        ALTURA = Distancia(suelo_balon, balon_frontal)/metro_realtivo
+
+        solucion.z = ALTURA.
+    *****************************************************************************/
+
+
 
 
     return solucion;

@@ -92,7 +92,7 @@ vector<MiPunto> MaxMinRelativos(vector<MiPunto> v);
 void DrawParabola(vector<MiPunto> v);
 vector<MiPunto> ABC(vector<MiPunto> puntos_campo);
 vector<MiPunto> PuntosDeFuga(vector<MiPunto> puntos_campo);
-MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, 
+MiPunto3D PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, 
                                     vector <Recta> f_limite, vector <Recta> l_limite, 
                                         vector <MiPunto> f_abc, vector <MiPunto> l_abc,
                                             MiPunto balon_frontal, MiPunto balon_lateral,

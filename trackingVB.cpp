@@ -428,6 +428,7 @@ int main(int argc, char* argv[]) {
 	bool salir_tracking = true;
 	bool imprime = true;
 
+	MiPunto3D p_3d;
 	MiPunto point_lateral_extrapolado_1, point_lateral_extrapolado_2;
 	MiPunto point_frontal_extrapolado_1, point_frontal_extrapolado_2;
 	MiPunto point, pointL, suelo, point_aux, pointL_aux;
@@ -560,19 +561,12 @@ int main(int argc, char* argv[]) {
             point = searchForMovement(thresholdImage,frame1, F, puntos, frontal_points, avg_frontal, desechables_f);
             pointL = searchForMovement(thresholdImageL,frame1L, L, puntosL, lateral_points, avg_lateral, desechables_l);
 
-
             if(!imprime && point.y > 0 && pointL.y > 0){
-        		
 				//TRANSFORMAR LOS PUNTOS DETECTADOS A PUNTOS REALES DE CAMPO DE JUEGO
-            	
-            	//ImprimeMiPunto(point);
-            	//ImprimeMiPunto(pointL);
-            	MiPunto p = PuntoTransformadoSuelo( puntos, puntosL, pgroundF, pgroundL, frontal_abc, lateral_abc,
-		                                            			point, pointL, puntos_fugaF, puntos_fugaL, frame1, frame1L);
+            	p_3d = PuntoTransformadoSuelo( puntos, puntosL, pgroundF, pgroundL, frontal_abc, lateral_abc,
+		                                        		point, pointL, puntos_fugaF, puntos_fugaL, frame1, frame1L);
 
-                //Vista_Frontal();
-        		Vista_Lateral(coordenadas_balon);
-				
+            	cout << "Solucion: - " << p_3d.x << ", " << p_3d.y << " - " << endl;
             }
         }
 		
