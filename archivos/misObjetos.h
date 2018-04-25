@@ -92,7 +92,11 @@ vector<MiPunto> MaxMinRelativos(vector<MiPunto> v);
 void DrawParabola(vector<MiPunto> v);
 vector<MiPunto> ABC(vector<MiPunto> puntos_campo);
 vector<MiPunto> PuntosDeFuga(vector<MiPunto> puntos_campo);
-MiPunto3D PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, 
+void PintaLinea(Mat &cameraFeed, MiPunto p, MiPunto q, int r, int g, int b, int tam);
+MiPunto PuntoDistanciaRecta(MiPunto p, Recta r, float distancia, int direccion);
+float AlturaBalon(Mat &cameraFeed, MiPunto low_ball, MiPunto high_ball, vector <MiPunto> frontal, 
+                                        vector<Recta> f_limite, vector<MiPunto> fuga, vector<MiPunto> abc, bool frente);
+MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, 
                                     vector <Recta> f_limite, vector <Recta> l_limite, 
                                         vector <MiPunto> f_abc, vector <MiPunto> l_abc,
                                             MiPunto balon_frontal, MiPunto balon_lateral,
@@ -101,3 +105,5 @@ MiPunto3D PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> late
 MiPunto Extrapolacion(float d, vector<MiPunto> abc);
 void ImprimeMiPunto(MiPunto p);
 void ImprimeRecta(Recta r);
+void Cuadricula(Mat &cameraFeed, int posicion, int divisiones, vector <MiPunto> campo, 
+                        vector <MiPunto> fuga, vector <MiPunto> abc, vector <Recta> lineas_campo);

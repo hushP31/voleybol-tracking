@@ -429,6 +429,7 @@ int main(int argc, char* argv[]) {
 	bool imprime = true;
 
 	MiPunto3D p_3d;
+	MiPunto p_2d;
 	MiPunto point_lateral_extrapolado_1, point_lateral_extrapolado_2;
 	MiPunto point_frontal_extrapolado_1, point_frontal_extrapolado_2;
 	MiPunto point, pointL, suelo, point_aux, pointL_aux;
@@ -508,6 +509,43 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     
+    if(puntos.empty()){
+	        //Inicializar campo de juego
+	        //Frontal
+		    puntos.push_back(MiPunto(206, 839));
+		    puntos.push_back(MiPunto(670, 658));
+		    puntos.push_back(MiPunto(1175, 670));
+		    puntos.push_back(MiPunto(1614, 871));
+		    
+		    //Lateral
+		    puntosL.push_back(MiPunto(172, 818));
+		    puntosL.push_back(MiPunto(344, 687));
+		    puntosL.push_back(MiPunto(1477, 651));
+		    puntosL.push_back(MiPunto(1837, 748));
+		}
+        
+        if((puntos.size() == 4) && (puntosL.size() == 4) && imprime){
+          	//Ordenar puntos de x0 <= x1 <= x2 <= x3
+			OrdenaPuntos(puntos);
+			OrdenaPuntos(puntosL);
+
+			if(extender)
+				ExtensionLateral(puntosL);
+
+			//Limites de los campos de juego
+			for(int t=0; t<puntos.size(); t++){
+				pgroundF.push_back(RectaDosPuntos(puntos[t], puntos[(t+1)%4]));
+				pgroundL.push_back(RectaDosPuntos(puntosL[t], puntosL[(t+1)%4]));
+			}
+		
+			frontal_abc = ABC(puntos);
+    		lateral_abc = ABC(puntosL);
+			
+			puntos_fugaF = PuntosDeFuga(puntos);
+			puntos_fugaL = PuntosDeFuga(puntosL);			 
+
+			imprime = false;
+        }
 
     //check if the video has reach its last frame.
     //we add '-1' because we are reading two frames from the video at a time.
@@ -561,12 +599,17 @@ int main(int argc, char* argv[]) {
             point = searchForMovement(thresholdImage,frame1, F, puntos, frontal_points, avg_frontal, desechables_f);
             pointL = searchForMovement(thresholdImageL,frame1L, L, puntosL, lateral_points, avg_lateral, desechables_l);
 
+            Cuadricula(frame1, 1, 9, puntos, puntos_fugaF, frontal_abc, pgroundF);
+            Cuadricula(frame1L, 1, 18, puntosL, puntos_fugaL, lateral_abc, pgroundL);
+            //Cuadricula(frame1, 0, 18, puntos, puntos_fugaF, frontal_abc, pgroundF);
+            //Cuadricula(frame1L, 0, 9, puntosL, puntos_fugaL, lateral_abc, pgroundL);
+
             if(!imprime && point.y > 0 && pointL.y > 0){
 				//TRANSFORMAR LOS PUNTOS DETECTADOS A PUNTOS REALES DE CAMPO DE JUEGO
-            	p_3d = PuntoTransformadoSuelo( puntos, puntosL, pgroundF, pgroundL, frontal_abc, lateral_abc,
+            	p_2d = PuntoTransformadoSuelo( puntos, puntosL, pgroundF, pgroundL, frontal_abc, lateral_abc,
 		                                        		point, pointL, puntos_fugaF, puntos_fugaL, frame1, frame1L);
 
-            	cout << "Solucion: - " << p_3d.x << ", " << p_3d.y << " - " << endl;
+            	//cout << "Solucion: - " << p_3d.x << ", " << p_3d.y << " - " << endl;
             }
         }
 		
@@ -647,59 +690,23 @@ int main(int argc, char* argv[]) {
             break;
         }
     	
-    	if(puntos.empty()){
-	        //Inicializar campo de juego
-	        //Frontal
-		    puntos.push_back(MiPunto(206, 839));
-		    puntos.push_back(MiPunto(670, 658));
-		    puntos.push_back(MiPunto(1175, 670));
-		    puntos.push_back(MiPunto(1614, 871));
-		    
-		    //Lateral
-		    puntosL.push_back(MiPunto(172, 818));
-		    puntosL.push_back(MiPunto(344, 687));
-		    puntosL.push_back(MiPunto(1477, 651));
-		    puntosL.push_back(MiPunto(1837, 748));
-		}
-        
-        if((puntos.size() == 4) && (puntosL.size() == 4) && imprime){
-          	//Ordenar puntos de x0 <= x1 <= x2 <= x3
-			OrdenaPuntos(puntos);
-			OrdenaPuntos(puntosL);
-
-			if(extender)
-				ExtensionLateral(puntosL);
-
-			//Limites de los campos de juego
-			for(int t=0; t<puntos.size(); t++){
-				pgroundF.push_back(RectaDosPuntos(puntos[t], puntos[(t+1)%4]));
-				pgroundL.push_back(RectaDosPuntos(puntosL[t], puntosL[(t+1)%4]));
-			}
-		
-			frontal_abc = ABC(puntos);
-    		lateral_abc = ABC(puntosL);
-			
-			puntos_fugaF = PuntosDeFuga(puntos);
-			puntos_fugaL = PuntosDeFuga(puntosL);			 
-
-			imprime = false;
-        }
+    	
 
 	}
     capture.release();
     captureL.release();
 
-    cout << "\n\nTotal Puntos laterales: " << lateral_points.size();
-    cout << "\nTotal Puntos Frontales: " << frontal_points.size() << endl;
+    //cout << "\n\nTotal Puntos laterales: " << lateral_points.size();
+    //cout << "\nTotal Puntos Frontales: " << frontal_points.size() << endl;
 
     //Encontrar puntos maximos y minimos relativos.
     vector <MiPunto> lateral_relativos = MaxMinRelativos(lateral_points);
     vector <MiPunto> frontal_relativos = MaxMinRelativos(frontal_points);
 
     for(int i=0; i<lateral_relativos.size(); i++){
-    	cout << "(" << lateral_relativos[i].x << ", " << lateral_relativos[i].y << ")\t ";
+    	//cout << "(" << lateral_relativos[i].x << ", " << lateral_relativos[i].y << ")\t ";
     }
-    cout << endl;
+    //cout << endl;
 
     //DrawParabola(lateral_relativos);
 
