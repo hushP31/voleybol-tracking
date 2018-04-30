@@ -959,26 +959,25 @@ float AlturaBalon(Mat &cameraFeed, MiPunto low_ball, MiPunto high_ball, vector <
         if(frente) anchura = 9.0;
         else anchura = 18.0;
 
-
-        cout << "SUELO: " << low_ball.x << ", " << low_ball.y << endl;
+        //cout << "SUELO: " << low_ball.x << ", " << low_ball.y << endl;
         
         r_bc = RectaDosPuntos(abc[1], abc[2]);
         d_relativa = (DD*(9-low_ball.x))/(9.0);
 
         p_x = PuntoDistanciaRecta(abc[1], r_bc, d_relativa, 1);
-        cout << "Distancia: " << DD << "\t d_relativa: " << d_relativa << "\t";
+        //cout << "Distancia: " << DD << "\t d_relativa: " << d_relativa << "\t";
         
         d_relativa = (DD*low_ball.y)/(18.0);
         p_y = PuntoDistanciaRecta(abc[1], r_bc, d_relativa, 1);
-        cout << d_relativa << endl;
+        //cout << d_relativa << endl;
         
         dcha = PuntoCorte(f_limite[2], RectaDosPuntos(fuga[2], PuntoCorte(f_limite[3], RectaDosPuntos(p_y, fuga[0]))));
         izda = PuntoCorte(f_limite[0], RectaDosPuntos(fuga[2], PuntoCorte(f_limite[1], RectaDosPuntos(p_y, fuga[0]))));
-        PintaLinea(cameraFeed, dcha, izda, 40, 0, 10, 3);
+        //PintaLinea(cameraFeed, dcha, izda, 40, 0, 10, 3);
 
         inf = PuntoCorte(f_limite[3], RectaDosPuntos(p_x, fuga[0]));
         sup = PuntoCorte(f_limite[1], RectaDosPuntos(p_x, fuga[0]));
-        PintaLinea(cameraFeed, inf, sup, 40, 0, 10, 3);
+        //PintaLinea(cameraFeed, inf, sup, 40, 0, 10, 3);
 
         r_horizontal = RectaDosPuntos(dcha, izda);
         r_vertical = RectaDosPuntos(inf , sup);
@@ -990,7 +989,7 @@ float AlturaBalon(Mat &cameraFeed, MiPunto low_ball, MiPunto high_ball, vector <
 
         altura = anchura*altura_actual/anchura_actual;
 
-        cout << "\nALTURA: " << altura << endl;
+        //cout << "\nALTURA: " << altura << endl;
 
         //Dibujar la red:
         float inc = anchura_actual*2.24/9.0;
@@ -1329,9 +1328,9 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
     xx = l_cameraFeed.size().width;
     putText(l_cameraFeed,"- X: " + doubleToString(solucion.x) + " Y: " + doubleToString(solucion.y) , Point(xx-450,260), 2, 1, Scalar(240,240,240), 1);
 
-    cout << "Suelo balon : " << suelo_balon.x << ", " << suelo_balon.y << " - " << balon_frontal.x << ", " << balon_frontal.y << endl;
+    //cout << "Suelo balon : " << suelo_balon.x << ", " << suelo_balon.y << " - " << balon_frontal.x << ", " << balon_frontal.y << endl;
 
-    cout << "Altura actual: " << AlturaBalon(f_cameraFeed, solucion, balon_frontal, frontal, f_limite, f_fuga, f_abc, true) << endl;
+    //cout << "Altura actual: " << AlturaBalon(f_cameraFeed, solucion, balon_frontal, frontal, f_limite, f_fuga, f_abc, true) << endl;
 
 
     return solucion;
@@ -1339,3 +1338,21 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
 
 
 
+vector<float> Parabola(MiPunto a, MiPunto b, MiPunto c){
+    vector<float> solucion;
+
+    float Beta, Pi, A, B, C;
+
+    Beta = (c.x*c.x) - ((b.x*b.x)-(a.x*a.x))/(b.x-a.x) - (a.x*a.x) + a.x*(((b.x*b.x)-(a.x*a.x))/(b.x-a.x));
+    Pi = a.y - (a.y+b.y)/(b.x-a.x) + a.x*((a.y+b.y)/(b.x-a.x)) - c.y;
+
+    A = Beta/Pi;
+    B = (-1*A*(b.x*b.x - a.x*a.x)-a.y+b.y)/(b.x-a.x);
+    C = a.y - A*(a.x*a.x) - B*a.x;
+
+    solucion.push_back(A);
+    solucion.push_back(B);
+    solucion.push_back(C);
+
+    return solucion;
+}

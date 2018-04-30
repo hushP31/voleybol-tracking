@@ -107,3 +107,5 @@ void ImprimeMiPunto(MiPunto p);
 void ImprimeRecta(Recta r);
 void Cuadricula(Mat &cameraFeed, int posicion, int divisiones, vector <MiPunto> campo, 
                         vector <MiPunto> fuga, vector <MiPunto> abc, vector <Recta> lineas_campo);
+
+vector<float> Parabola(MiPunto a, MiPunto b, MiPunto c);

@@ -32,14 +32,23 @@ vector <Recta> pgroundF, pgroundL;
 vector <MiPunto> puntos_fugaL, puntos_fugaF;
 MiPunto fuga_left_inicio, fuga_left_final;
 MiPunto fuga_left_inicioL, fuga_left_finalL;
+MiPunto manual_pointF, manual_pointL;
 
 vector <MiPunto4D> coordenadas_balon;
 vector <MiPunto4D> coordenadas_balon_final;
 /****************************/
 
 bool imprime_linea_puntos = true;
-
+bool pendiente_points_F = false;
+bool pendiente_points_L = false;
 bool limite = true;
+
+
+struct RealPoints
+{
+	MiPunto p;
+	bool automatico;
+};
 
 //***************************************************************************
 // Programa principal
@@ -57,7 +66,13 @@ void PlaygroundHorizontal(int event, int x, int y, int flags, void* userdata){
 		cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
 		p.x = x;
 		p.y = y;
-		puntos.push_back(p);
+
+		if(puntos.size() < 4)
+			puntos.push_back(p);
+		else{
+			manual_pointF = p;
+			pendiente_points_F = true;
+		}
 	}
 	else if(event == EVENT_RBUTTONDOWN){
 		cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
@@ -78,7 +93,12 @@ void PlaygroundLateral(int event, int x, int y, int flags, void* userdata){
 		
 		p.x = x;
 		p.y = y;
-		puntosL.push_back(p);
+		if(puntos.size() < 4)
+			puntosL.push_back(p);
+		else{
+			manual_pointL = p;
+			pendiente_points_L = true;
+		}
 	}
 	else if(event == EVENT_RBUTTONDOWN){
 		cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
@@ -106,7 +126,7 @@ Rect objectBoundingRectangle = Rect(0,0,0,0);
 Rect objectBoundingRectangleAUX = Rect(0,0,0,0);
  
 
-MiPunto searchForMovement(Mat thresholdImage, Mat &cameraFeed, char camara, vector<MiPunto> terrero, vector<MiPunto> &anteriores, vector<float> &media_area, vector<MiPunto> &puntos_desechables){
+MiPunto searchForMovement(Mat thresholdImage, Mat &cameraFeed, char camara, vector<MiPunto> terrero, vector<RealPoints> &anteriores, vector<float> &media_area, vector<MiPunto> &puntos_desechables){
     //notice how we use the '&' operator for objectDetected and cameraFeed. This is because we wish
     //to take the values passed into the function and manipulate them, rather than just working with a copy.
     //eg. we draw to the cameraFeed to be displayed in the main() function.
@@ -164,7 +184,7 @@ MiPunto searchForMovement(Mat thresholdImage, Mat &cameraFeed, char camara, vect
    		p_anterior.y = -1;
    	}
    	else{
-   		p_anterior = anteriores[anteriores.size()-1];
+   		p_anterior = anteriores[anteriores.size()-1].p;
    	}
 
 
@@ -311,9 +331,21 @@ MiPunto searchForMovement(Mat thresholdImage, Mat &cameraFeed, char camara, vect
 						Buscar contorno mas proximo a las 3 ultimas posiciones.
 			****/
 
-    		
-    		p2 = anteriores.at(anteriores.size()-2);
-			p3 = anteriores.at(anteriores.size()-3);
+    		p2 = anteriores.at(anteriores.size()-2).p;
+			p3 = anteriores.at(anteriores.size()-3).p;
+    		int ii = -1;
+
+    		for(int i=1; (i<11) && (ii==-1); i++){
+    			if(anteriores.at(anteriores.size()-i).automatico == false){
+    				p2 = anteriores.at(anteriores.size()-i).p;
+    				ii = i;
+    			}
+    		}
+    		if(ii != -1)
+    			for(int i=ii; i<11; i++)
+					if(anteriores.at(anteriores.size()-i).automatico == false)
+    					p3 = anteriores.at(anteriores.size()-i).p;
+
 
     		if((p_actual.y < altura_minima && !Desechable(p_actual, puntos_desechables))){
     			//Escocger entre todos el mas cercano al balon anterior
@@ -367,8 +399,12 @@ MiPunto searchForMovement(Mat thresholdImage, Mat &cameraFeed, char camara, vect
 		point_sol.x = p_actual.x;
 	    point_sol.y = p_actual.y;
 
+	    RealPoints rp;
+	    rp.p = point_sol;
+	    rp.automatico = true;
+
 	    media_area.push_back(area_balon);
-	    anteriores.push_back(point_sol);
+	    anteriores.push_back(rp);
 
     }
     else{
@@ -435,7 +471,9 @@ int main(int argc, char* argv[]) {
 	MiPunto point, pointL, suelo, point_aux, pointL_aux;
 	std::vector<float> avg_color_f, avg_color_l;
 
-	vector<MiPunto> frontal_points, lateral_points, desechables_f, desechables_l, frontal_abc, lateral_abc;
+	vector<MiPunto> desechables_f, desechables_l, frontal_abc, lateral_abc;
+
+	vector<RealPoints> frontal_points, lateral_points;
 
 	MiPunto3D coordenada_balon;
 	
@@ -557,6 +595,9 @@ int main(int argc, char* argv[]) {
 	  	contador_frame++;
 	  	tiempo_frame = contador_frame / (num_frame_segundo*1.0);
 
+	  	
+
+
 	  	if(una_iteracion)
 	  		pause = true;
 
@@ -599,6 +640,21 @@ int main(int argc, char* argv[]) {
             point = searchForMovement(thresholdImage,frame1, F, puntos, frontal_points, avg_frontal, desechables_f);
             pointL = searchForMovement(thresholdImageL,frame1L, L, puntosL, lateral_points, avg_lateral, desechables_l);
 
+            if(pendiente_points_L && pendiente_points_L){
+            	point = manual_pointF;
+            	pointL = manual_pointL;
+
+            	pendiente_points_L = false;
+            	pendiente_points_F = false;
+            	
+            	lateral_points[lateral_points.size()-1].p = pointL;
+            	lateral_points[lateral_points.size()-1].automatico = false;
+            	frontal_points[frontal_points.size()-1].p = point;
+            	frontal_points[frontal_points.size()-1].automatico = false;
+            	//lateral_points.push_back(pointL);
+            	//frontal_points.push_back(point);
+            }
+
             Cuadricula(frame1, 1, 9, puntos, puntos_fugaF, frontal_abc, pgroundF);
             Cuadricula(frame1L, 1, 18, puntosL, puntos_fugaL, lateral_abc, pgroundL);
             //Cuadricula(frame1, 0, 18, puntos, puntos_fugaF, frontal_abc, pgroundF);
@@ -609,7 +665,7 @@ int main(int argc, char* argv[]) {
             	p_2d = PuntoTransformadoSuelo( puntos, puntosL, pgroundF, pgroundL, frontal_abc, lateral_abc,
 		                                        		point, pointL, puntos_fugaF, puntos_fugaL, frame1, frame1L);
 
-            	//cout << "Solucion: - " << p_3d.x << ", " << p_3d.y << " - " << endl;
+            	cout << "Solucion: - " << p_2d.x << ", " << p_2d.y << " - " << endl;
             }
         }
 		
@@ -638,6 +694,11 @@ int main(int argc, char* argv[]) {
     	/*************************************************************************
 										MENU
     	**************************************************************************/
+        if(una_iteracion){
+        	una_iteracion = false;
+        	pause = true;
+        }
+
         switch(waitKey(10)){
 		        case 27: //'esc' key has been pressed, exit program.
 		        	exit_program = true;
@@ -653,9 +714,9 @@ int main(int argc, char* argv[]) {
 		            if(debugMode == false) cout << "Debug mode disabled." << endl;
 		            else cout << "Debug mode enabled." << endl;
 	            break;
-	            case 49:
-		        una_iteracion = true;
-	        break;
+	            case 39:
+			        una_iteracion = true;
+		        break;
 		        case 32: //'space' has been pressed. this will pause/resume the code.
 		            pause = !pause;
 		            if(pause == true){ 
@@ -677,7 +738,7 @@ int main(int argc, char* argv[]) {
 						            una_iteracion = false;
 						            cout << "Code Resumed" << endl;
 					            break;
-					            case 49:
+					            case 39:
 					            	una_iteracion = true;
 					            	pause = false;
 					            break;
@@ -700,12 +761,12 @@ int main(int argc, char* argv[]) {
     //cout << "\nTotal Puntos Frontales: " << frontal_points.size() << endl;
 
     //Encontrar puntos maximos y minimos relativos.
-    vector <MiPunto> lateral_relativos = MaxMinRelativos(lateral_points);
-    vector <MiPunto> frontal_relativos = MaxMinRelativos(frontal_points);
+    //vector <MiPunto> lateral_relativos = MaxMinRelativos(lateral_points);
+    //vector <MiPunto> frontal_relativos = MaxMinRelativos(frontal_points);
 
-    for(int i=0; i<lateral_relativos.size(); i++){
+    //for(int i=0; i<lateral_relativos.size(); i++){
     	//cout << "(" << lateral_relativos[i].x << ", " << lateral_relativos[i].y << ")\t ";
-    }
+    //}
     //cout << endl;
 
     //DrawParabola(lateral_relativos);
