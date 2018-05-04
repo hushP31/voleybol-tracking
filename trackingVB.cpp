@@ -465,7 +465,6 @@ int main(int argc, char* argv[]) {
 	bool imprime = true;
 
 	MiPunto3D p_3d;
-	MiPunto p_2d;
 	MiPunto point_lateral_extrapolado_1, point_lateral_extrapolado_2;
 	MiPunto point_frontal_extrapolado_1, point_frontal_extrapolado_2;
 	MiPunto point, pointL, suelo, point_aux, pointL_aux;
@@ -479,6 +478,13 @@ int main(int argc, char* argv[]) {
 	
 	Recta perp_pgroundF, perp_pgroundL;
 	
+	/*******************************/
+	bool parabola_manual = false;
+	vector<MiPunto3D> vector_points_parabola_prueba;
+
+	/********************************/
+
+
 	point.x = -1;
 	point.y = -1;
 	pointL.x = -1;
@@ -653,6 +659,9 @@ int main(int argc, char* argv[]) {
             	frontal_points[frontal_points.size()-1].automatico = false;
             	//lateral_points.push_back(pointL);
             	//frontal_points.push_back(point);
+
+            	parabola_manual = true;
+
             }
 
             Cuadricula(frame1, 1, 9, puntos, puntos_fugaF, frontal_abc, pgroundF);
@@ -662,10 +671,47 @@ int main(int argc, char* argv[]) {
 
             if(!imprime && point.y > 0 && pointL.y > 0){
 				//TRANSFORMAR LOS PUNTOS DETECTADOS A PUNTOS REALES DE CAMPO DE JUEGO
-            	p_2d = PuntoTransformadoSuelo( puntos, puntosL, pgroundF, pgroundL, frontal_abc, lateral_abc,
+            	p_3d = PuntoTransformadoSuelo( puntos, puntosL, pgroundF, pgroundL, frontal_abc, lateral_abc,
 		                                        		point, pointL, puntos_fugaF, puntos_fugaL, frame1, frame1L);
 
-            	cout << "Solucion: - " << p_2d.x << ", " << p_2d.y << " - " << endl;
+            	cout << "Solucion: - " << p_3d.x << ", " << p_3d.y << " - " << p_3d.z << " - " << endl;
+
+            	if(parabola_manual){
+            		vector_points_parabola_prueba.push_back(p_3d);
+            		parabola_manual = false;
+            	}
+
+            	if(vector_points_parabola_prueba.size() == 3){
+            		vector <float> PRBLX, PRBLZ;
+
+            		MiPunto a, b, c;
+
+            		a.x = vector_points_parabola_prueba[0].x;
+            		a.y = vector_points_parabola_prueba[0].y;
+            		b.x = vector_points_parabola_prueba[1].x;
+            		b.y = vector_points_parabola_prueba[1].y;
+            		c.x = vector_points_parabola_prueba[2].x;
+            		c.y = vector_points_parabola_prueba[2].y;
+            		PRBLX = Parabola(a,b,c);
+
+            		cout << "\n PRBL X: " << PRBLX[0] << "x² + " << PRBLX[1] << " x + " << PRBLX[2] << "\n";
+ 
+            		a.x = vector_points_parabola_prueba[0].z;
+            		b.x = vector_points_parabola_prueba[1].z;
+            		c.x = vector_points_parabola_prueba[2].z;
+            		PRBLZ = Parabola(a,b,c);
+            		cout << "\n PRBL Z: " << PRBLZ[0] << "x² + " << PRBLZ[1] << " x + " << PRBLZ[2] << "\n";
+            		cout << endl << endl;
+            		for(int i=0; i<3; i++){
+	            		ImprimeMiPunto3D(vector_points_parabola_prueba[i]);
+	            		cout << "\t";
+            		}
+            		cout << endl;
+            		cout << "Distancia parabola (2) : " << DistanciaPuntosParabola(PRBLX, PRBLZ, vector_points_parabola_prueba[0], vector_points_parabola_prueba[2], 2) << endl;
+            		cout << "Distancia parabola (50) : " << DistanciaPuntosParabola(PRBLX, PRBLZ, vector_points_parabola_prueba[0], vector_points_parabola_prueba[2], 40) << endl;
+            		cout << "Distancia parabola (100): " << DistanciaPuntosParabola(PRBLX, PRBLZ, vector_points_parabola_prueba[0], vector_points_parabola_prueba[2], 100) << endl;
+            		cout << endl << endl;
+    			}
             }
         }
 		

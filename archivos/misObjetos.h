@@ -96,7 +96,7 @@ void PintaLinea(Mat &cameraFeed, MiPunto p, MiPunto q, int r, int g, int b, int 
 MiPunto PuntoDistanciaRecta(MiPunto p, Recta r, float distancia, int direccion);
 float AlturaBalon(Mat &cameraFeed, MiPunto low_ball, MiPunto high_ball, vector <MiPunto> frontal, 
                                         vector<Recta> f_limite, vector<MiPunto> fuga, vector<MiPunto> abc, bool frente);
-MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, 
+MiPunto3D PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, 
                                     vector <Recta> f_limite, vector <Recta> l_limite, 
                                         vector <MiPunto> f_abc, vector <MiPunto> l_abc,
                                             MiPunto balon_frontal, MiPunto balon_lateral,
@@ -104,8 +104,10 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
                                                 	Mat &f_cameraFeed, Mat &l_cameraFeed);
 MiPunto Extrapolacion(float d, vector<MiPunto> abc);
 void ImprimeMiPunto(MiPunto p);
+void ImprimeMiPunto3D(MiPunto3D p);
 void ImprimeRecta(Recta r);
 void Cuadricula(Mat &cameraFeed, int posicion, int divisiones, vector <MiPunto> campo, 
                         vector <MiPunto> fuga, vector <MiPunto> abc, vector <Recta> lineas_campo);
 
 vector<float> Parabola(MiPunto a, MiPunto b, MiPunto c);
+float DistanciaPuntosParabola(vector<float> ParX, vector<float> ParZ, MiPunto3D inicial, MiPunto3D final, int precision);

@@ -60,6 +60,10 @@ void ImprimeMiPunto(MiPunto p){
     cout << "(" << p.x << ", " << p.y << ")  ";
 }
 
+void ImprimeMiPunto3D(MiPunto3D p){
+    cout << "(" << p.x << ", " << p.y << ", " << p.z << ")" ;
+}
+
 void ImprimeRecta(Recta r){
     cout << "y = " << r.m << " x + " << r.k << endl;
 }
@@ -1004,7 +1008,7 @@ float AlturaBalon(Mat &cameraFeed, MiPunto low_ball, MiPunto high_ball, vector <
 
 
 
-MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, vector <Recta> f_limite, vector <Recta> l_limite, 
+MiPunto3D PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> lateral, vector <Recta> f_limite, vector <Recta> l_limite, 
                                         vector <MiPunto> f_abc, vector <MiPunto> l_abc, MiPunto balon_frontal, MiPunto balon_lateral,
                                                 vector <MiPunto> f_fuga, vector <MiPunto> l_fuga, Mat &f_cameraFeed, Mat &l_cameraFeed )
 {
@@ -1021,6 +1025,7 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
     */
     
     MiPunto solucion;
+    MiPunto3D solucion3D;
     MiPunto suelo_balon;
     Recta f_referencia_9, f_referencia_par;
     Recta l_referencia_18, l_referencia_par;
@@ -1329,11 +1334,12 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
     putText(l_cameraFeed,"- X: " + doubleToString(solucion.x) + " Y: " + doubleToString(solucion.y) , Point(xx-450,260), 2, 1, Scalar(240,240,240), 1);
 
     //cout << "Suelo balon : " << suelo_balon.x << ", " << suelo_balon.y << " - " << balon_frontal.x << ", " << balon_frontal.y << endl;
+    solucion3D.x = solucion.x;
+    solucion3D.z = solucion.y;
+    solucion3D.y = AlturaBalon(f_cameraFeed, solucion, balon_frontal, frontal, f_limite, f_fuga, f_abc, true);
 
-    //cout << "Altura actual: " << AlturaBalon(f_cameraFeed, solucion, balon_frontal, frontal, f_limite, f_fuga, f_abc, true) << endl;
 
-
-    return solucion;
+    return solucion3D;
 }
 
 
@@ -1341,18 +1347,67 @@ MiPunto PuntoTransformadoSuelo(vector <MiPunto> frontal, vector <MiPunto> latera
 vector<float> Parabola(MiPunto a, MiPunto b, MiPunto c){
     vector<float> solucion;
 
-    float Beta, Pi, A, B, C;
+    float A, B, C, div1, div2;
 
-    Beta = (c.x*c.x) - ((b.x*b.x)-(a.x*a.x))/(b.x-a.x) - (a.x*a.x) + a.x*(((b.x*b.x)-(a.x*a.x))/(b.x-a.x));
-    Pi = a.y - (a.y+b.y)/(b.x-a.x) + a.x*((a.y+b.y)/(b.x-a.x)) - c.y;
+    div1 = (c.x-a.x)*(b.y-a.y) - (b.x-a.x)*(c.y-a.y);
+    div2 = (b.x*b.x - a.x*a.x)*(c.x-a.x) - (c.x*c.x - a.x*a.x)*(b.x-a.x);
+    A = div1/div2;
 
-    A = Beta/Pi;
-    B = (-1*A*(b.x*b.x - a.x*a.x)-a.y+b.y)/(b.x-a.x);
-    C = a.y - A*(a.x*a.x) - B*a.x;
+    div1 = c.y-a.y - A*(c.x*c.x - a.x*a.x);
+    div2 = c.x - a.x;
+    B = div1/div2;
+
+    C = a.y - A*a.x*a.x - B*a.x;
 
     solucion.push_back(A);
     solucion.push_back(B);
     solucion.push_back(C);
 
     return solucion;
+}
+
+
+float DistanciaPuntosParabola(vector<float> ParX, vector<float> ParZ, MiPunto3D inicial, MiPunto3D final, int precision){
+
+    MiPunto iniX, iniZ, finX, finZ;
+    MiPunto x_aux, x_siguiente_aux;
+    MiPunto z_aux, z_siguiente_aux;
+    float distX, distZ, dist_Real, incX, incZ;
+
+
+    iniX.x = inicial.x; iniX.y = inicial.y;
+    iniZ.x = inicial.z; iniZ.y = inicial.y; 
+    finX.x = final.x; finX.y = final.y;
+    finZ.x = final.z; finZ.y = final.y; 
+
+    incX = (inicial.x - final.x)/precision;
+    incZ = (inicial.z - final.z)/precision;
+
+    x_aux = iniX;
+    x_siguiente_aux.x = iniX.x + incX;
+    x_siguiente_aux.y = ParX[0]*x_siguiente_aux.x*x_siguiente_aux.x + ParX[1]*x_siguiente_aux.x + ParX[2];
+
+    z_aux = iniZ;
+    z_siguiente_aux.x = iniZ.x + incZ;
+    z_siguiente_aux.y = ParZ[0]*z_siguiente_aux.x*z_siguiente_aux.x + ParZ[1]*z_siguiente_aux.x + ParZ[2];
+
+    distX = 0;
+    distZ = 0;
+    
+    for(int i=0; i<precision; i++){
+        distX += DistanciaPuntos(x_aux, x_siguiente_aux);
+        x_aux = x_siguiente_aux;
+        x_siguiente_aux.x += incX;
+        x_siguiente_aux.y = ParX[0]*x_siguiente_aux.x*x_siguiente_aux.x + ParX[1]*x_siguiente_aux.x + ParX[2];
+
+        distZ += DistanciaPuntos(z_aux, z_siguiente_aux);
+        z_aux = z_siguiente_aux;
+        z_siguiente_aux.x += incZ;
+        z_siguiente_aux.y = ParZ[0]*z_siguiente_aux.x*z_siguiente_aux.x + ParZ[1]*z_siguiente_aux.x + ParZ[2];
+    }
+
+    dist_Real = sqrt(distX*distX + distZ*distZ);
+
+    return dist_Real;
+
 }
