@@ -481,7 +481,7 @@ int main(int argc, char* argv[]) {
 	/*******************************/
 	bool parabola_manual = false;
 	vector<MiPunto3D> vector_points_parabola_prueba;
-
+	vector<float> vector_time_parabola;
 	/********************************/
 
 
@@ -601,7 +601,6 @@ int main(int argc, char* argv[]) {
 	  	contador_frame++;
 	  	tiempo_frame = contador_frame / (num_frame_segundo*1.0);
 
-	  	
 
 
 	  	if(una_iteracion)
@@ -677,6 +676,7 @@ int main(int argc, char* argv[]) {
             	cout << "Solucion: - " << p_3d.x << ", " << p_3d.y << " - " << p_3d.z << " - " << endl;
 
             	if(parabola_manual){
+            		vector_time_parabola.push_back(tiempo_frame);
             		vector_points_parabola_prueba.push_back(p_3d);
             		parabola_manual = false;
             	}
@@ -707,10 +707,12 @@ int main(int argc, char* argv[]) {
 	            		cout << "\t";
             		}
             		cout << endl;
-            		cout << "Distancia parabola (2) : " << DistanciaPuntosParabola(PRBLX, PRBLZ, vector_points_parabola_prueba[0], vector_points_parabola_prueba[2], 2) << endl;
-            		cout << "Distancia parabola (50) : " << DistanciaPuntosParabola(PRBLX, PRBLZ, vector_points_parabola_prueba[0], vector_points_parabola_prueba[2], 40) << endl;
-            		cout << "Distancia parabola (100): " << DistanciaPuntosParabola(PRBLX, PRBLZ, vector_points_parabola_prueba[0], vector_points_parabola_prueba[2], 100) << endl;
-            		cout << endl << endl;
+            		float dist100 = DistanciaPuntosParabola(PRBLX, PRBLZ, vector_points_parabola_prueba[0], vector_points_parabola_prueba[2], 100);
+            		float diff_tiempo = vector_time_parabola[2] - vector_time_parabola[0];
+            		float vel_ms = dist100/diff_tiempo;
+            		cout << "Distancia parabola (100) : " << dist100 << endl;
+            		cout << "Diferencia Tiempo: " << diff_tiempo << endl;
+            		cout << "Velocidad: " << vel_ms << "m/s  =  " << vel_ms*3.6 << "km/h" << endl;
     			}
             }
         }

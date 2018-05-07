@@ -1373,40 +1373,79 @@ float DistanciaPuntosParabola(vector<float> ParX, vector<float> ParZ, MiPunto3D 
     MiPunto x_aux, x_siguiente_aux;
     MiPunto z_aux, z_siguiente_aux;
     float distX, distZ, dist_Real, incX, incZ;
+    Recta recta_cortes, recta_aux, recta_aux_paralela;
+    vector<MiPunto> centrales, centrales_parabola;
 
-
+    distX = 0;
+    distZ = 0;
     iniX.x = inicial.x; iniX.y = inicial.y;
     iniZ.x = inicial.z; iniZ.y = inicial.y; 
     finX.x = final.x; finX.y = final.y;
     finZ.x = final.z; finZ.y = final.y; 
 
-    incX = (inicial.x - final.x)/precision;
-    incZ = (inicial.z - final.z)/precision;
 
-    x_aux = iniX;
-    x_siguiente_aux.x = iniX.x + incX;
-    x_siguiente_aux.y = ParX[0]*x_siguiente_aux.x*x_siguiente_aux.x + ParX[1]*x_siguiente_aux.x + ParX[2];
+    //Parabola X
+    recta_cortes = RectaDosPuntos(iniX, finX);
 
-    z_aux = iniZ;
-    z_siguiente_aux.x = iniZ.x + incZ;
-    z_siguiente_aux.y = ParZ[0]*z_siguiente_aux.x*z_siguiente_aux.x + ParZ[1]*z_siguiente_aux.x + ParZ[2];
-
-    distX = 0;
-    distZ = 0;
+    x_aux = finX;
+    x_aux.y += precision;
+    recta_aux_paralela = RectaDosPuntos(iniX, x_aux);
     
-    for(int i=0; i<precision; i++){
-        distX += DistanciaPuntos(x_aux, x_siguiente_aux);
-        x_aux = x_siguiente_aux;
-        x_siguiente_aux.x += incX;
-        x_siguiente_aux.y = ParX[0]*x_siguiente_aux.x*x_siguiente_aux.x + ParX[1]*x_siguiente_aux.x + ParX[2];
 
-        distZ += DistanciaPuntos(z_aux, z_siguiente_aux);
-        z_aux = z_siguiente_aux;
-        z_siguiente_aux.x += incZ;
-        z_siguiente_aux.y = ParZ[0]*z_siguiente_aux.x*z_siguiente_aux.x + ParZ[1]*z_siguiente_aux.x + ParZ[2];
+    for(int i=0; i<precision+1; i++){
+        x_aux.y = finX.y + i;
+        recta_aux = ParalelaPunto(recta_aux_paralela, x_aux);
+        centrales.push_back(PuntoCorte(recta_cortes, recta_aux));
+    }
+    
+/*
+    for(int i=0; i<centrales.size(); i++){
+        ImprimeMiPunto(centrales[i]);
+        cout << " - "; 
+    }
+*/
+    for(int i=0; i<centrales.size(); i++){
+        x_aux = centrales[i];
+        x_aux.y = ParX[0]*x_aux.x*x_aux.x + ParX[1]*x_aux.x + ParX[2];
+        centrales_parabola.push_back(x_aux);
     }
 
-    dist_Real = sqrt(distX*distX + distZ*distZ);
+    //Calcular la distancia entre los puntos consecutivos de centrales_parabola
+    for(int i=0; i<centrales_parabola.size()-1; i++)
+        distX += DistanciaPuntos(centrales_parabola[i], centrales_parabola[i+1]);
+
+
+    //Parabola Z
+    centrales.clear();
+    centrales_parabola.clear();
+
+    recta_cortes = RectaDosPuntos(iniZ, finZ);
+
+    x_aux = finZ;
+    x_aux.y += precision;
+    recta_aux_paralela = RectaDosPuntos(iniZ, x_aux);
+    
+
+    for(int i=precision; i>1; i--){
+        x_aux.y = finZ.y + i;
+        recta_aux = ParalelaPunto(recta_aux_paralela, x_aux);
+        centrales.push_back(PuntoCorte(recta_cortes, recta_aux));
+    }
+    centrales.push_back(finZ);
+
+    for(int i=0; i<centrales.size(); i++){
+        x_aux = centrales[i];
+        x_aux.y = ParZ[0]*x_aux.x*x_aux.x + ParZ[1]*x_aux.x + ParZ[2];
+        centrales_parabola.push_back(x_aux);
+    }
+
+    //Calcular la distancia entre los puntos consecutivos de centrales_parabola
+    for(int i=0; i<centrales_parabola.size()-1; i++)
+        distZ += DistanciaPuntos(centrales_parabola[i], centrales_parabola[i+1]);
+
+
+
+    dist_Real = sqrt((distX*distX) + (distZ*distZ));
 
     return dist_Real;
 
