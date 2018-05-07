@@ -442,7 +442,7 @@ int main(int argc, char* argv[]) {
 
 	string nombre_archivo = "Femenino.txt";
 
-	int contador_frame, num_frame_segundo;
+	float contador_frame, num_frame_segundo;
 	int ayuda = 0;
 
 	char F = 'F';
@@ -508,14 +508,14 @@ int main(int argc, char* argv[]) {
     bool objectDetected = false;
     //these two can be toggled by pressing 'd' or 't'
     bool debugMode = false;
-    bool trackingEnabled = false;
+    bool trackingEnabled = true;
     //pause and resume code
     bool pause = false;
     //set up the matrices that we will need
     bool extender = false;
 
     contador_frame = 0;
-	num_frame_segundo = 24;
+	num_frame_segundo = 29.97;
 
     if (argc < 4 ){
         video_trackingF = "../videos/videos_sinc/fondo.mp4";
@@ -599,8 +599,9 @@ int main(int argc, char* argv[]) {
     {
 	  	//Calcular el tiempo exacto del frame a analizar.
 	  	contador_frame++;
-	  	tiempo_frame = contador_frame / (num_frame_segundo*1.0);
+	  	tiempo_frame = capture.get(CV_CAP_PROP_POS_FRAMES) / (num_frame_segundo*1.0);
 
+	  	cout << "Tiempo actual :" << tiempo_frame << endl;
 
 
 	  	if(una_iteracion)
