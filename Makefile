@@ -8,8 +8,8 @@ TARGETS= trackingVB
 # encontrar ficheros para incluir mediante la opcion -I
 # la opcion -g sirve para permitir la depuraci�n
 #
-CFLAGS=    -I/usr/local/include/opencv -I/usr/local/include/opencv2 -L/usr/local/lib/ -g -DXWINDOWS -DSHM -I/usr/include -I.
-CXXFLAGS=  -I/usr/local/include/opencv -I/usr/local/include/opencv2 -L/usr/local/lib/ -g -DXWINDOWS -DSHM -I/usr/include -I.
+CFLAGS=   -fopenmp -lpthread -I/usr/local/include/opencv -I/usr/local/include/opencv2 -L/usr/local/lib/ -g -DXWINDOWS -DSHM -I/usr/include -I.
+CXXFLAGS= -fopenmp -lpthread -I/usr/local/include/opencv -I/usr/local/include/opencv2 -L/usr/local/lib/ -g -DXWINDOWS -DSHM -I/usr/include -I.
 
 # banderas pra el enlazador
 # Se indica directorios donde encontrar las funciontecas con -L. Usando -l seguido del

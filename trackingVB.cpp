@@ -643,8 +643,13 @@ int main(int argc, char* argv[]) {
         //if tracking enabled, search for contours in our thresholded image
         if(trackingEnabled){
 
-            point = searchForMovement(thresholdImage,frame1, F, puntos, frontal_points, avg_frontal, desechables_f);
-            pointL = searchForMovement(thresholdImageL,frame1L, L, puntosL, lateral_points, avg_lateral, desechables_l);
+        	#pragma omp parallel sections
+			{
+				#pragma omp section
+            		point = searchForMovement(thresholdImage,frame1, F, puntos, frontal_points, avg_frontal, desechables_f);
+            	#pragma omp section
+            		pointL = searchForMovement(thresholdImageL,frame1L, L, puntosL, lateral_points, avg_lateral, desechables_l);
+    		}
 
             if(pendiente_points_L && pendiente_points_L){
             	point = manual_pointF;
@@ -732,9 +737,17 @@ int main(int argc, char* argv[]) {
 		setMouseCallback("Horizontal", PlaygroundHorizontal, NULL);
 		setMouseCallback("Lateral", PlaygroundLateral, NULL);
    			
+
+		#pragma omp parallel sections
+			{
+				#pragma omp section
+            		imshow("Horizontal",frame1);
+            	#pragma omp section
+            		imshow("Lateral",frame1L);
+    		}
         //show our captured frame
-        imshow("Horizontal",frame1);
-        imshow("Lateral",frame1L);
+        
+        
 		
         
 
