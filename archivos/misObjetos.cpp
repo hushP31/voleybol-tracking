@@ -34,9 +34,10 @@ MiPunto3D::MiPunto3D(double x1, double y1, double z1){
 	z = z1;
 }
 
-MiPunto4D::MiPunto4D(double tiempo, MiPunto3D espacio){
+MiPunto4D::MiPunto4D(double tiempo, MiPunto3D espacio, bool manual){
 	segundos = tiempo;
 	coordenada = espacio;
+    creacion = manual;
 }
 
 MiPunto4D::MiPunto4D(){
@@ -44,6 +45,7 @@ MiPunto4D::MiPunto4D(){
 	coordenada.x = 0;
 	coordenada.y = 0;
 	coordenada.z = 0;
+    creacion = false; 
 }
 
 
@@ -459,7 +461,7 @@ Mat ConvertImageThreshold(Mat frame1, Mat frame2, bool debugMode, String camara)
 
     namedWindow(camara, WINDOW_NORMAL);
     
-    resizeWindow(camara, 1080, 720);
+    resizeWindow(camara, 640, 380);
 
 	if(debugMode==true){
         //show the difference image and threshold image
@@ -505,7 +507,8 @@ void ImprimeArchivo(string nombre, vector<MiPunto4D> p){
 	std::stringstream ss;
 
 	for(int i = 0; i < p.size(); ++i){
-		ss << p[i].segundos << " "; 
+        ss << p[i].creacion << "\t"; 
+		ss << p[i].segundos << "\t"; 
 		ss << p[i].coordenada.x;
 		ss << " ";
 		ss << p[i].coordenada.y;
@@ -1449,4 +1452,90 @@ float DistanciaPuntosParabola(vector<float> ParX, vector<float> ParZ, MiPunto3D 
 
     return dist_Real;
 
+}
+
+void ControlMenu(bool &pause, bool &debugMode, bool &trackingEnabled, bool &exit_program, bool &salir_tracking, bool &one_frame){
+
+    while (pause == true){
+                        //stay in this loop until 
+                        switch (waitKey()){
+                            //a switch statement inside a switch statement? Mind blown.
+                            case 116: //'t' has been pressed. this will toggle tracking
+                                trackingEnabled = !trackingEnabled;
+                                if(trackingEnabled == false)
+                                    cout << "Tracking disabled." << endl;
+                                else
+                                    cout << "Tracking enabled." << endl;
+                            break;
+                            case 32: 
+                                //change pause back to false
+                                pause = false;
+                                cout << "Code Resumed" << endl;
+                            break;
+                            case 39:
+                                pause = false;
+                            break;
+                            case 27: //'esc' key has been pressed, exit program.
+                                salir_tracking = false;
+                            break;
+                            case 110: //'n' key has been pressed, next frame.
+                                pause = false;
+                                one_frame = true;
+                            break;
+                        }
+                    }
+
+    switch(waitKey(10)){
+            case 27: //'esc' key has been pressed, exit program.
+                exit_program = true;
+                salir_tracking = false;
+            break;
+            case 116: //'t' has been pressed. this will toggle tracking
+                trackingEnabled = !trackingEnabled;
+                if(trackingEnabled == false) cout << "Tracking disabled." << endl;
+                else cout << "Tracking enabled." << endl;
+            break;
+            case 100: //'d' has been pressed. this will debug mode
+                debugMode = !debugMode;
+                if(debugMode == false) cout << "Debug mode disabled." << endl;
+                else cout << "Debug mode enabled." << endl;
+            break;
+            case 32: //'space' has been pressed. this will pause/resume the code.
+                pause = !pause;
+                if(pause == true){ 
+                    cout << "Code paused, press 'p' again to resume" << endl;
+                    while (pause == true){
+                        //stay in this loop until 
+                        switch (waitKey()){
+                            //a switch statement inside a switch statement? Mind blown.
+                            case 116: //'t' has been pressed. this will toggle tracking
+                                trackingEnabled = !trackingEnabled;
+                                if(trackingEnabled == false)
+                                    cout << "Tracking disabled." << endl;
+                                else
+                                    cout << "Tracking enabled." << endl;
+                            break;
+                            case 32: 
+                                //change pause back to false
+                                pause = false;
+                                cout << "Code Resumed" << endl;
+                            break;
+                            case 39:
+                                pause = false;
+                            break;
+                            case 27: //'esc' key has been pressed, exit program.
+                                salir_tracking = false;
+                            break;
+                            case 110: //'n' key has been pressed, next frame.
+                                pause = false;
+                                one_frame = true;
+                            break;
+                        }
+                    }
+                }
+            break;
+        }
+
+        if(one_frame) pause = true;
+        one_frame = false;
 }

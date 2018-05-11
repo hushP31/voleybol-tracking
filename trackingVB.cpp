@@ -42,7 +42,7 @@ bool imprime_linea_puntos = true;
 bool pendiente_points_F = false;
 bool pendiente_points_L = false;
 bool limite = true;
-
+bool one_frame = false;
 
 struct RealPoints
 {
@@ -460,7 +460,6 @@ int main(int argc, char* argv[]) {
 	double distancia_extrapolada_right;
 
 	bool exit_program = false;
-	bool una_iteracion = false;
 	bool salir_tracking = true;
 	bool imprime = true;
 
@@ -603,43 +602,26 @@ int main(int argc, char* argv[]) {
 
 	  	cout << "Tiempo actual :" << tiempo_frame << endl;
 
+	  	#pragma omp parallel sections
+		{
+			#pragma omp section
+			{
+        		capture.read(frame1);
+				capture.read(frame2);
 
-	  	if(una_iteracion)
-	  		pause = true;
+				//Frontal -->
+        		thresholdImage = ConvertImageThreshold(frame1, frame2, debugMode, Front);
+			}
+        	#pragma omp section
+        	{
+				captureL.read(frame1L);
+    			captureL.read(frame2L);
 
-	  	while(pause == true){
-            //stay in this loop until 
-            switch (waitKey()){
-                //a switch statement inside a switch statement? Mind blown.
-		        case 32: 
-		            //change pause back to false
-		            pause = false;
-		            una_iteracion = false;
-		            cout << "Code Resumed" << endl;
-	            break;
-	            case 49:
-	            	una_iteracion = true;
-	            	pause = false;
-	            break;
-		        case 27: //'esc' key has been pressed, exit program.
-				      salir_tracking = false;
-		        break;
+    			//Lateral -->
+        		thresholdImageL = ConvertImageThreshold(frame1L, frame2L, debugMode, Lat);
 			}
 		}
-
-	  	capture.read(frame1);
-    	capture.read(frame2);
-
-    	captureL.read(frame1L);
-    	captureL.read(frame2L);
-	    
-        //Frontal -->
-        thresholdImage = ConvertImageThreshold(frame1, frame2, debugMode, Front);
-        // -----------
-        //Lateral -->
-        thresholdImageL = ConvertImageThreshold(frame1L, frame2L, debugMode, Lat);
-        // -----------
-        
+	  	
         //if tracking enabled, search for contours in our thresholded image
         if(trackingEnabled){
 
@@ -671,15 +653,22 @@ int main(int argc, char* argv[]) {
 
             Cuadricula(frame1, 1, 9, puntos, puntos_fugaF, frontal_abc, pgroundF);
             Cuadricula(frame1L, 1, 18, puntosL, puntos_fugaL, lateral_abc, pgroundL);
-            //Cuadricula(frame1, 0, 18, puntos, puntos_fugaF, frontal_abc, pgroundF);
-            //Cuadricula(frame1L, 0, 9, puntosL, puntos_fugaL, lateral_abc, pgroundL);
 
             if(!imprime && point.y > 0 && pointL.y > 0){
 				//TRANSFORMAR LOS PUNTOS DETECTADOS A PUNTOS REALES DE CAMPO DE JUEGO
             	p_3d = PuntoTransformadoSuelo( puntos, puntosL, pgroundF, pgroundL, frontal_abc, lateral_abc,
-		                                        		point, pointL, puntos_fugaF, puntos_fugaL, frame1, frame1L);
+		                                        							point, pointL, puntos_fugaF, puntos_fugaL, frame1, frame1L);
 
             	cout << "Solucion: - " << p_3d.x << ", " << p_3d.y << " - " << p_3d.z << " - " << endl;
+
+            	p_3d.x = Trunca(2, p_3d.x);
+            	p_3d.y = Trunca(2, p_3d.y);
+            	p_3d.z = Trunca(2, p_3d.z);
+            	tiempo_frame = Trunca(5, tiempo_frame);
+
+            	MiPunto4D p4D(tiempo_frame, p_3d, parabola_manual);
+            	coordenadas_balon.push_back(p4D);
+
 
             	if(parabola_manual){
             		vector_time_parabola.push_back(tiempo_frame);
@@ -687,6 +676,7 @@ int main(int argc, char* argv[]) {
             		parabola_manual = false;
             	}
 
+            	//Parabola creada manualmente
             	if(vector_points_parabola_prueba.size() == 3){
             		vector <float> PRBLX, PRBLZ;
 
@@ -720,6 +710,8 @@ int main(int argc, char* argv[]) {
             		cout << "Diferencia Tiempo: " << diff_tiempo << endl;
             		cout << "Velocidad: " << vel_ms << "m/s  =  " << vel_ms*3.6 << "km/h" << endl;
     			}
+    			/***********************************/
+
             }
         }
 		
@@ -730,90 +722,30 @@ int main(int argc, char* argv[]) {
 		namedWindow("Horizontal", WINDOW_NORMAL);
         namedWindow("Lateral", WINDOW_NORMAL);
    		
-        resizeWindow("Horizontal", 1080, 720);
-        resizeWindow("Lateral", 1080, 720);
+        resizeWindow("Horizontal", 640, 380);
+        resizeWindow("Lateral", 640, 380);
    		
 		//set the callback function for any mouse event
 		setMouseCallback("Horizontal", PlaygroundHorizontal, NULL);
 		setMouseCallback("Lateral", PlaygroundLateral, NULL);
    			
-
+		//show our captured frame
 		#pragma omp parallel sections
-			{
-				#pragma omp section
-            		imshow("Horizontal",frame1);
-            	#pragma omp section
-            		imshow("Lateral",frame1L);
-    		}
-        //show our captured frame
+		{
+			#pragma omp section
+        		imshow("Horizontal",frame1);
+        	#pragma omp section
+        		imshow("Lateral",frame1L);
+		}
         
-        
-		
-        
-
 
 
     	/*************************************************************************
 										MENU
     	**************************************************************************/
-        if(una_iteracion){
-        	una_iteracion = false;
-        	pause = true;
-        }
 
-        switch(waitKey(10)){
-		        case 27: //'esc' key has been pressed, exit program.
-		        	exit_program = true;
-		            salir_tracking = false;
-	        break;
-		        case 116: //'t' has been pressed. this will toggle tracking
-		            trackingEnabled = !trackingEnabled;
-		            if(trackingEnabled == false) cout << "Tracking disabled." << endl;
-		            else cout << "Tracking enabled." << endl;
-	            break;
-		        case 100: //'d' has been pressed. this will debug mode
-		            debugMode = !debugMode;
-		            if(debugMode == false) cout << "Debug mode disabled." << endl;
-		            else cout << "Debug mode enabled." << endl;
-	            break;
-	            case 39:
-			        una_iteracion = true;
-		        break;
-		        case 32: //'space' has been pressed. this will pause/resume the code.
-		            pause = !pause;
-		            if(pause == true){ 
-	                	cout << "Code paused, press 'p' again to resume" << endl;
-				        while (pause == true){
-				            //stay in this loop until 
-				            switch (waitKey()){
-				                //a switch statement inside a switch statement? Mind blown.
-						        case 116: //'t' has been pressed. this will toggle tracking
-				  		            trackingEnabled = !trackingEnabled;
-				  		            if(trackingEnabled == false)
-				  		            	cout << "Tracking disabled." << endl;
-				  		            else
-				  		            	cout << "Tracking enabled." << endl;
-			  		            break;
-						        case 32: 
-						            //change pause back to false
-						            pause = false;
-						            una_iteracion = false;
-						            cout << "Code Resumed" << endl;
-					            break;
-					            case 39:
-					            	una_iteracion = true;
-					            	pause = false;
-					            break;
-						        case 27: //'esc' key has been pressed, exit program.
-								    salir_tracking = false;
-		        				break;
-							}
-						}
-		            }
-            break;
-        }
-    	
-    	
+		ControlMenu(pause, debugMode, trackingEnabled, exit_program, salir_tracking, one_frame);
+
 
 	}
     capture.release();

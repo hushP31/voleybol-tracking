@@ -34,9 +34,10 @@ class MiPunto4D{
 public:
 	double segundos;
 	MiPunto3D coordenada;
+	bool creacion;
 
 	MiPunto4D();
-	MiPunto4D(double tiempo, MiPunto3D espacio);
+	MiPunto4D(double tiempo, MiPunto3D espacio, bool manual);
 };
 
 class Recta{
@@ -111,3 +112,4 @@ void Cuadricula(Mat &cameraFeed, int posicion, int divisiones, vector <MiPunto> 
 
 vector<float> Parabola(MiPunto a, MiPunto b, MiPunto c);
 float DistanciaPuntosParabola(vector<float> ParX, vector<float> ParZ, MiPunto3D inicial, MiPunto3D final, int precision);
+void ControlMenu(bool &pause, bool &debugMode, bool &trackingEnabled, bool &exit_program, bool &salir_tracking, bool &one_frame);
