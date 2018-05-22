@@ -146,7 +146,7 @@ MiPunto searchForMovement(Mat thresholdImage, Mat &cameraFeed, char camara, vect
     vector< vector<Point> > largestContourVec;
     vector< vector<Point> > contours_balls, contours_balls_2;
    	int indice = 0;
-   	int minimo = 90; 
+   	int minimo = 70; 
    	int maximo = 2500;
    	MiPunto p_anterior;
    	std::vector<int> v_index_color;
@@ -160,7 +160,7 @@ MiPunto searchForMovement(Mat thresholdImage, Mat &cameraFeed, char camara, vect
    	MAXcolor = 0;
 
    	if(camara == 'L'){
-   		minimo = 100;
+   		minimo = 80;
    		maximo = 1200;
 
    		div = 6.0;
@@ -459,6 +459,9 @@ int main(int argc, char* argv[]) {
 	double distancia_extrapolada_left;
 	double distancia_extrapolada_right;
 
+	vector <float> parabola_x, parabola_z;
+	MiPunto aPar, bPar, cPar;
+
 	bool exit_program = false;
 	bool salir_tracking = true;
 	bool imprime = true;
@@ -600,7 +603,7 @@ int main(int argc, char* argv[]) {
 	  	contador_frame++;
 	  	tiempo_frame = capture.get(CV_CAP_PROP_POS_FRAMES) / (num_frame_segundo*1.0);
 
-	  	cout << "Tiempo actual :" << tiempo_frame << endl;
+	  	//cout << "Tiempo actual :" << tiempo_frame << endl;
 
 	  	#pragma omp parallel sections
 		{
@@ -669,6 +672,27 @@ int main(int argc, char* argv[]) {
             	MiPunto4D p4D(tiempo_frame, p_3d, parabola_manual);
             	coordenadas_balon.push_back(p4D);
 
+            	if(coordenadas_balon.size() >=3){
+	            	//Parabola automatica X,Y
+	            	aPar.x = coordenadas_balon[coordenadas_balon.size()-1].coordenada.x;
+	            	aPar.y = coordenadas_balon[coordenadas_balon.size()-1].coordenada.y;
+	            	bPar.x = coordenadas_balon[coordenadas_balon.size()-2].coordenada.x;
+	            	bPar.y = coordenadas_balon[coordenadas_balon.size()-2].coordenada.y;
+	            	cPar.x = coordenadas_balon[coordenadas_balon.size()-3].coordenada.x;
+	            	cPar.y = coordenadas_balon[coordenadas_balon.size()-3].coordenada.y;
+	            	
+	            	parabola_x = Parabola(aPar, bPar, cPar);
+	            	//Parabola automatica Z,Y
+	            	aPar.x = coordenadas_balon[coordenadas_balon.size()-1].coordenada.z;
+	            	bPar.x = coordenadas_balon[coordenadas_balon.size()-2].coordenada.z;
+	            	cPar.x = coordenadas_balon[coordenadas_balon.size()-3].coordenada.z;
+
+	            	parabola_z = Parabola(aPar, bPar, cPar);
+
+					cout << "\n PRBL X: " << parabola_x[0] << "x² + " << parabola_x[1] << " x + " << parabola_x[2] << "\n";
+					cout << "\n PRBL Z: " << parabola_z[0] << "x² + " << parabola_z[1] << " x + " << parabola_z[2] << "\n";
+
+            	}
 
             	if(parabola_manual){
             		vector_time_parabola.push_back(tiempo_frame);
@@ -706,9 +730,9 @@ int main(int argc, char* argv[]) {
             		float dist100 = DistanciaPuntosParabola(PRBLX, PRBLZ, vector_points_parabola_prueba[0], vector_points_parabola_prueba[2], 100);
             		float diff_tiempo = vector_time_parabola[2] - vector_time_parabola[0];
             		float vel_ms = dist100/diff_tiempo;
-            		cout << "Distancia parabola (100) : " << dist100 << endl;
-            		cout << "Diferencia Tiempo: " << diff_tiempo << endl;
-            		cout << "Velocidad: " << vel_ms << "m/s  =  " << vel_ms*3.6 << "km/h" << endl;
+            		//cout << "Distancia parabola (100) : " << dist100 << endl;
+            		//cout << "Diferencia Tiempo: " << diff_tiempo << endl;
+            		//cout << "Velocidad: " << vel_ms << "m/s  =  " << vel_ms*3.6 << "km/h" << endl;
     			}
     			/***********************************/
 
