@@ -1539,3 +1539,37 @@ void ControlMenu(bool &pause, bool &debugMode, bool &trackingEnabled, bool &exit
         if(one_frame) pause = true;
         one_frame = false;
 }
+
+float DistanciaPuntos3D(MiPunto3D a, MiPunto3D b){
+
+    MiPunto ax, az, bx, bz;
+    float dist_x, dist_z, solucion;
+
+    ax.x = a.x;
+    ax.y = a.y;
+    az.x = a.z;
+    az.y = a.y;
+
+    bx.x = b.x;
+    bx.y = b.y;
+    bz.x = b.z;
+    bz.y = b.y;
+
+    dist_x = DistanciaPuntos(ax, bx);
+    dist_z = DistanciaPuntos(az, bz);
+
+    solucion = sqrt(dist_z*dist_z + dist_x*dist_x);
+
+    return solucion;
+
+}
+
+
+float Velocidad2Puntos(MiPunto4D a, MiPunto4D b){
+
+    float distancia = DistanciaPuntos3D(a.coordenada, b.coordenada);
+    float dif_tiempo = a.segundos - b.segundos;
+    float velocidad = distancia/dif_tiempo;
+
+    return velocidad;
+}

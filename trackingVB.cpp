@@ -466,6 +466,9 @@ int main(int argc, char* argv[]) {
 	bool salir_tracking = true;
 	bool imprime = true;
 
+	float dist100, diff_tiempo, vel_ms;
+
+
 	MiPunto3D p_3d;
 	MiPunto point_lateral_extrapolado_1, point_lateral_extrapolado_2;
 	MiPunto point_frontal_extrapolado_1, point_frontal_extrapolado_2;
@@ -505,6 +508,8 @@ int main(int argc, char* argv[]) {
     VideoCapture capture;
     Mat frame1L,frame2L, thresholdImageL;
     VideoCapture captureL;
+
+    vector<Mat> last_frame;
 
     //some boolean variables for added functionality
     bool objectDetected = false;
@@ -624,7 +629,21 @@ int main(int argc, char* argv[]) {
         		thresholdImageL = ConvertImageThreshold(frame1L, frame2L, debugMode, Lat);
 			}
 		}
-	  	
+	  	/*
+	  	if(last_frame.size() < 100)
+	  		last_frame.push_back(frame1);
+	  	else{
+	  		//Eliminar el primero
+	  		last_frame.erase(last_frame.begin());
+	  		//Añadir 
+	  		last_frame.push_back(frame1);
+
+	  		imshow("LAST FRAME",last_frame[2]);
+	  		imshow("LAST FRAME2",last_frame[80]);
+	  	}
+		*/
+
+
         //if tracking enabled, search for contours in our thresholded image
         if(trackingEnabled){
 
@@ -662,7 +681,7 @@ int main(int argc, char* argv[]) {
             	p_3d = PuntoTransformadoSuelo( puntos, puntosL, pgroundF, pgroundL, frontal_abc, lateral_abc,
 		                                        							point, pointL, puntos_fugaF, puntos_fugaL, frame1, frame1L);
 
-            	cout << "Solucion: - " << p_3d.x << ", " << p_3d.y << " - " << p_3d.z << " - " << endl;
+            	cout << "Punto Actual Reconocido: - " << p_3d.x << ", " << p_3d.y << " - " << p_3d.z << " - " << endl;
 
             	p_3d.x = Trunca(2, p_3d.x);
             	p_3d.y = Trunca(2, p_3d.y);
@@ -671,6 +690,10 @@ int main(int argc, char* argv[]) {
 
             	MiPunto4D p4D(tiempo_frame, p_3d, parabola_manual);
             	coordenadas_balon.push_back(p4D);
+
+            	vel_ms = Velocidad2Puntos(coordenadas_balon[coordenadas_balon.size()-1], coordenadas_balon[coordenadas_balon.size()-2]);
+
+				cout << "Velocidad balon: " << vel_ms << endl;
 
             	if(coordenadas_balon.size() >=3){
 	            	//Parabola automatica X,Y
@@ -689,8 +712,8 @@ int main(int argc, char* argv[]) {
 
 	            	parabola_z = Parabola(aPar, bPar, cPar);
 
-					cout << "\n PRBL X: " << parabola_x[0] << "x² + " << parabola_x[1] << " x + " << parabola_x[2] << "\n";
-					cout << "\n PRBL Z: " << parabola_z[0] << "x² + " << parabola_z[1] << " x + " << parabola_z[2] << "\n";
+					//cout << "\n PRBL X: " << parabola_x[0] << "x² + " << parabola_x[1] << " x + " << parabola_x[2] << "\n";
+					//cout << "\n PRBL Z: " << parabola_z[0] << "x² + " << parabola_z[1] << " x + " << parabola_z[2] << "\n";
 
             	}
 
@@ -727,13 +750,14 @@ int main(int argc, char* argv[]) {
 	            		cout << "\t";
             		}
             		cout << endl;
-            		float dist100 = DistanciaPuntosParabola(PRBLX, PRBLZ, vector_points_parabola_prueba[0], vector_points_parabola_prueba[2], 100);
-            		float diff_tiempo = vector_time_parabola[2] - vector_time_parabola[0];
-            		float vel_ms = dist100/diff_tiempo;
+            		dist100 = DistanciaPuntosParabola(PRBLX, PRBLZ, vector_points_parabola_prueba[0], vector_points_parabola_prueba[2], 100);
+            		diff_tiempo = vector_time_parabola[2] - vector_time_parabola[0];
+            		vel_ms = dist100/diff_tiempo;
             		//cout << "Distancia parabola (100) : " << dist100 << endl;
             		//cout << "Diferencia Tiempo: " << diff_tiempo << endl;
             		//cout << "Velocidad: " << vel_ms << "m/s  =  " << vel_ms*3.6 << "km/h" << endl;
-    			}
+
+    			}	
     			/***********************************/
 
             }
@@ -742,10 +766,11 @@ int main(int argc, char* argv[]) {
 		/*******************************************************************
         							VISUALIZACION
     	********************************************************************/
-
+        namedWindow("LAST FRAME", WINDOW_NORMAL);
 		namedWindow("Horizontal", WINDOW_NORMAL);
         namedWindow("Lateral", WINDOW_NORMAL);
-   		
+			
+		resizeWindow("LAST FRAME", 640, 380);
         resizeWindow("Horizontal", 640, 380);
         resizeWindow("Lateral", 640, 380);
    		
